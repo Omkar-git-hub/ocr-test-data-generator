@@ -1,0 +1,2 @@
+function canvasToJpgBlob(canvas,quality=.78){return new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",quality));}
+async function downloadCanvas(canvas,filename,quality=.78){const blob=await canvasToJpgBlob(canvas,quality);const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}

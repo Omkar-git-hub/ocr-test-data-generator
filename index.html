@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D Card Generator</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+<div class="container">
+  <header class="app-header">
+    <div>
+      <h1>D Card Generator</h1>
+      <p class="hint">Synthetic PAN &amp; Aadhaar-style test documents for OCR and automation testing.</p>
+    </div>
+    <span class="test-badge">TEST DATA ONLY</span>
+  </header>
+
+  <div class="mode-tabs">
+    <button id="modeManualBtn">Manual Input</button>
+    <button id="modeBatchBtn" class="secondary">Batch Excel</button>
+  </div>
+
+  <section id="manualSection" class="card">
+    <div class="section-head">
+      <div><h2>Manual Generator</h2><p class="hint">Enter data and generate a synthetic OCR test document.</p></div>
+    </div>
+    <div class="grid">
+      <div class="form-panel">
+        <div class="two-col">
+          <div>
+            <label for="docType">Document Type</label>
+            <select id="docType"><option value="PAN">PAN Test Card</option><option value="Aadhaar">Aadhaar Test Card</option></select>
+          </div>
+          <div>
+            <label for="inputGender">Gender</label>
+            <select id="inputGender"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select>
+          </div>
+        </div>
+        <div class="two-col">
+          <div><label for="inputName">Full Name</label><input id="inputName" type="text" placeholder="Enter full name"></div>
+          <div><label for="inputFather">Father / Parent Name</label><input id="inputFather" type="text" placeholder="Enter parent name"></div>
+        </div>
+        <div class="two-col">
+          <div><label for="inputDob">Date of Birth</label><input id="inputDob" type="text" placeholder="DD/MM/YYYY"></div>
+          <div><label for="inputNumber">ID Number</label><input id="inputNumber" type="text" placeholder="Leave blank to generate"></div>
+        </div>
+        <label for="inputAddress">Address</label>
+        <textarea id="inputAddress" placeholder="Enter address"></textarea>
+        <label for="photoInput">Photo (Optional)</label>
+        <input type="file" id="photoInput" accept="image/*">
+        <div class="actions"><button id="generateBtn">Generate Preview</button><button id="randomizeBtn" class="secondary">Randomize Data</button><button id="clearBtn" class="ghost">Clear</button></div>
+        <div id="manualStatus" class="status"></div>
+      </div>
+      <div class="preview-panel">
+        <div class="row-between"><label>Preview</label><span class="hint">Clearly marked synthetic document</span></div>
+        <div class="canvas-wrap"><canvas id="cardCanvas"></canvas><div id="emptyPreview" class="empty-preview">No preview generated</div></div>
+        <div class="actions"><button id="downloadCardBtn" disabled>Download JPEG</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="batchSection" class="card" style="display:none">
+    <div class="section-head"><div><h2>Batch Excel Processor</h2><p class="hint">Upload Excel and matching photos. Photo values should be filenames, not local PC paths.</p></div></div>
+    <div class="upload-grid">
+      <div class="upload-box"><strong>1. Excel</strong><span class="hint">Required columns: Name, DOB, Gender, Address, ParentName, Photo. PAN and Aadhaar are optional.</span><div class="actions"><a href="#" id="downloadTemplateBtn" class="file-btn secondary">Download Sample Template</a><input type="file" id="excelUpload" accept=".xlsx,.xls" hidden><button id="uploadExcelTrigger" class="secondary">Choose Excel</button></div><span id="excelFileName" class="status"></span></div>
+      <div class="upload-box"><strong>2. Photos</strong><span class="hint">Upload multiple images or one ZIP. Filenames must match the Photo column.</span><div class="actions"><input type="file" id="bulkPhotoUpload" accept="image/*" multiple><input type="file" id="bulkZipUpload" accept=".zip"><button id="clearPhotosBtn" class="ghost">Clear Photos</button></div><span id="photoUploadStatus" class="status"></span></div>
+    </div>
+    <div class="batch-summary" id="batchSummary"><span>Records <b id="recordCount">0</b></span><span>Photos matched <b id="matchedCount">0</b></span><span>Missing photos <b id="missingCount">0</b></span></div>
+    <div id="batchStatus" class="status"></div>
+    <div class="row-between batch-actions"><h3>Parsed Records</h3><div class="actions"><button id="downloadAllPan" disabled>Download PAN ZIP</button><button id="downloadAllAadhaar" disabled>Download Aadhaar ZIP</button><button id="downloadBothZip" disabled>Download Combined ZIP</button></div></div>
+    <div class="table-wrap"><table id="batchTable"><thead><tr><th>#</th><th>Photo</th><th>Name</th><th>DOB</th><th>Gender</th><th>PAN</th><th>Aadhaar</th><th>Address</th></tr></thead><tbody id="batchTableBody"><tr><td colspan="8" class="empty-cell">No Excel file uploaded yet.</td></tr></tbody></table></div>
+  </section>
+</div>
+<script src="js/data-generator.js"></script>
+<script src="js/document-renderer.js"></script>
+<script src="js/image-export.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
