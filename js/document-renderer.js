@@ -297,7 +297,7 @@ function renderPanCard(ctx, person) {
         "bold 20px Arial";
 
     ctx.fillText(
-        "TEST DEMO DEPARTMENT",
+        "स्थायी खाता संख्या",
         w / 2,
         50
     );
@@ -308,7 +308,7 @@ function renderPanCard(ctx, person) {
     ctx.fillStyle = "#526579";
 
     ctx.fillText(
-        "PERMANENT ACCOUNT TEST DOCUMENT",
+        "INCOME TAX DEPARTMENT",
         w / 2,
         69
     );
@@ -329,7 +329,7 @@ function renderPanCard(ctx, person) {
     ctx.fillStyle = "#64748b";
 
     ctx.fillText(
-        "PAN OCR TEST",
+        "",
         w - 38,
         48
     );
@@ -338,7 +338,7 @@ function renderPanCard(ctx, person) {
         "9px Arial";
 
     ctx.fillText(
-        "SYNTHETIC",
+        "",
         w - 38,
         64
     );
@@ -500,7 +500,7 @@ function renderPanCard(ctx, person) {
         "9px Arial";
 
     ctx.fillText(
-        "OCR TEST REFERENCE",
+        "",
         48,
         445
     );
@@ -525,7 +525,7 @@ function renderPanCard(ctx, person) {
 
     drawDocumentFooter(
         ctx,
-        "SYNTHETIC PAN OCR TEST DATA"
+        ""
     );
 }
 
@@ -894,7 +894,7 @@ function renderAadhaarCard(
         "bold 20px Arial";
 
     ctx.fillText(
-        "TEST DEMO IDENTIFICATION",
+        "Government of India",
         42,
         77
     );
@@ -906,7 +906,7 @@ function renderAadhaarCard(
         "#667085";
 
     ctx.fillText(
-        "SYNTHETIC IDENTITY OCR TEST DOCUMENT",
+        "",
         42,
         97
     );
@@ -931,7 +931,7 @@ function renderAadhaarCard(
         "bold 10px Arial";
 
     ctx.fillText(
-        "AADHAAR OCR TEST",
+        "",
         w - 40,
         76
     );
@@ -1102,7 +1102,7 @@ function renderAadhaarCard(
         "9px Arial";
 
     ctx.fillText(
-        "OCR TEST REFERENCE",
+        "",
         350,
         447
     );
@@ -1116,7 +1116,7 @@ function renderAadhaarCard(
     ctx.fillText(
         createReference(
             person.aadhaar,
-            "AADHAAR"
+            ""
         ),
         350,
         464
@@ -1128,7 +1128,7 @@ function renderAadhaarCard(
 
     drawDocumentFooter(
         ctx,
-        "SYNTHETIC AADHAAR OCR TEST DATA"
+        ""
     );
 }
 
@@ -1765,29 +1765,8 @@ function drawQrFinder(
 // DOCUMENT REFERENCE
 // ============================================================
 
-function createReference(
-    value,
-    prefix
-) {
 
-    const clean =
-        String(
-            value ||
-            "TEST"
-        )
-            .replace(
-                /[^A-Za-z0-9]/g,
-                ""
-            )
-            .slice(-8)
-            .toUpperCase();
 
-    return (
-        prefix +
-        "-OCR-" +
-        (clean || "00000000")
-    );
-}
 
 
 // ============================================================
@@ -1827,7 +1806,7 @@ function drawDocumentFooter(
         "bold 11px Arial";
 
     ctx.fillText(
-        "NOT A GOVERNMENT DOCUMENT",
+        "",
         w / 2,
         h - 17
     );
@@ -1869,7 +1848,7 @@ function drawSyntheticMark(
         "center";
 
     ctx.fillText(
-        "SYNTHETIC TEST DATA",
+        "",
         0,
         0
     );
