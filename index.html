@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>D Card Generator</title>
+<title>Demo Data Generator</title>
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -12,7 +12,7 @@
 <div class="container">
   <header class="app-header">
     <div>
-      <h1>D Card Generator</h1>
+      <h1>Demo Data Generator</h1>
       <p class="hint">Synthetic PAN &amp; Aadhaar-style test documents for OCR and automation testing.</p>
     </div>
     <span class="test-badge">TEST DATA ONLY</span>
@@ -55,7 +55,6 @@
         <div id="manualStatus" class="status"></div>
       </div>
       <div class="preview-panel">
-        <div class="row-between"><label>Preview</label><span class="hint">Clearly marked synthetic document</span></div>
         <div class="canvas-wrap"><canvas id="cardCanvas"></canvas><div id="emptyPreview" class="empty-preview">No preview generated</div></div>
         <div class="actions"><button id="downloadCardBtn" disabled>Download JPEG</button></div>
       </div>
