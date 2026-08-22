@@ -237,10 +237,10 @@ async function drawSyntheticDocument(
     // 4. Add synthetic test marker
     // --------------------------------------------------------
 
-    drawSyntheticMarker(
-        ctx,
-        documentType
-    );
+    // drawSyntheticMarker(
+    //     ctx,
+    //     documentType
+    // );
 }
 
 
