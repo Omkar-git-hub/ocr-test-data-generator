@@ -28,7 +28,7 @@ import streamlit.components.v1 as components
 # ============================================================
 
 st.set_page_config(
-    page_title="D Card Generator",
+    page_title="Test Data Generator",
     page_icon="🧪",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -427,6 +427,6 @@ final_html = f"""
 
 components.html(
     final_html,
-    height=1050,
+    height=700,
     scrolling=True,
 )
