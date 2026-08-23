@@ -2,85 +2,135 @@
 // FILE: js/image-export.js
 //
 // PURPOSE:
-//     Export generated PAN / Aadhaar canvas images as JPEG.
+//     Image export, JPEG compression and photo normalization
+//     utilities for the OCR Test Data Generator.
 //
-// REQUIREMENT:
-//     Final image MUST be below 80 KB.
+// RESPONSIBILITIES:
+//     1. Compress PAN / Aadhaar cards below 80 KB.
+//     2. Convert uploaded photos to exactly 900 x 1200.
+//     3. Compress generated photos below 80 KB.
+//     4. Strictly reject any photo that remains >= 80 KB.
+//     5. Provide download functionality for generated cards.
 //
-// DESIGN:
-//     - Preserve original resolution when possible.
-//     - Prefer JPEG quality reduction first.
-//     - If quality reduction is not enough, reduce resolution.
-//     - Automatically find the best quality/size combination.
-//     - PAN and Aadhaar are handled dynamically.
+// USED BY:
+//     js/app.js
 //
-// OUTPUT:
-//     JPEG
-//     Target size: < 80 KB
+// IMPORTANT SIZE RULES:
+//
+//     PAN / Aadhaar:
+//         < 80 KB
+//
+//     Photos:
+//         900 x 1200 pixels
+//         < 80 KB
+//
+//     The application will NEVER silently add an oversized
+//     photo to the generated ZIP.
 // ============================================================
 
 
 // ============================================================
-// EXPORT CONFIGURATION
+// GLOBAL IMAGE EXPORT CONFIGURATION
 // ============================================================
 
 const IMAGE_EXPORT_CONFIG = {
 
     // --------------------------------------------------------
-    // HARD FILE SIZE LIMIT
+    // Maximum allowed file size.
+    //
+    // 80 * 1024 = 81,920 bytes.
+    //
+    // We use STRICTLY LESS THAN this value.
     // --------------------------------------------------------
 
     maxBytes: 80 * 1024,
 
 
     // --------------------------------------------------------
-    // JPEG QUALITY RANGE
+    // PAN / Aadhaar compression settings.
     // --------------------------------------------------------
 
     maxQuality: 0.88,
 
-    minQuality: 0.58,
+    minQuality: 0.35,
+
+    qualityStep: 0.03,
 
 
     // --------------------------------------------------------
-    // RESOLUTION RANGE
+    // PAN / Aadhaar fallback scaling.
     //
-    // Original resolution is always tried first.
-    //
-    // If the image is still too large, resolution is reduced.
+    // Documents can be reduced slightly if JPEG quality
+    // alone cannot reach the required file size.
     // --------------------------------------------------------
 
-    maxScale: 1.00,
+    scaleStep: 0.90,
 
-    minScale: 0.65,
-
-
-    // --------------------------------------------------------
-    // Resolution reduction step
-    // --------------------------------------------------------
-
-    scaleStep: 0.05
+    minScale: 0.60
 };
 
 
 // ============================================================
-// CANVAS -> JPEG BLOB
+// PHOTO EXPORT CONFIGURATION
+// ============================================================
+
+const PHOTO_EXPORT_CONFIG = {
+
+    // --------------------------------------------------------
+    // REQUIRED PHOTO RESOLUTION
+    // --------------------------------------------------------
+
+    width: 900,
+
+    height: 1200,
+
+
+    // --------------------------------------------------------
+    // Start with good JPEG quality.
+    // Compression will automatically reduce quality until
+    // the photo becomes smaller than 80 KB.
+    // --------------------------------------------------------
+
+    maxQuality: 0.88,
+
+    minQuality: 0.20,
+
+    qualityStep: 0.02,
+
+
+    // --------------------------------------------------------
+    // Maximum allowed photo size.
+    //
+    // IMPORTANT:
+    // The photo must be STRICTLY LESS THAN this value.
+    // --------------------------------------------------------
+
+    maxBytes:
+        80 * 1024
+};
+
+
+// ============================================================
+// CONVERT CANVAS TO JPEG BLOB
 // ============================================================
 
 function canvasToJpgBlob(
     canvas,
-    quality
+    quality = 0.88
 ) {
 
     return new Promise(
         resolve => {
 
             canvas.toBlob(
-                resolve,
+                blob => {
+
+                    resolve(blob);
+
+                },
                 "image/jpeg",
                 quality
             );
-
         }
     );
 }
@@ -89,10 +139,12 @@ function canvasToJpgBlob(
 // ============================================================
 // CREATE SCALED CANVAS
 //
-// IMPORTANT:
-//     Original canvas is never modified.
+// USED FOR:
+//     PAN / Aadhaar compression.
 //
-//     A temporary canvas is created for compression.
+// NOTE:
+//     Photo resolution is NOT reduced here.
+//     Photos always remain 900 x 1200.
 // ============================================================
 
 function createScaledCanvas(
@@ -100,35 +152,45 @@ function createScaledCanvas(
     scale
 ) {
 
-    const canvas =
-        document.createElement("canvas");
-
-
-    canvas.width =
+    const width =
         Math.max(
             1,
             Math.round(
-                sourceCanvas.width * scale
+                sourceCanvas.width *
+                scale
             )
         );
 
 
-    canvas.height =
+    const height =
         Math.max(
             1,
             Math.round(
-                sourceCanvas.height * scale
+                sourceCanvas.height *
+                scale
             )
         );
+
+
+    const scaledCanvas =
+        document.createElement(
+            "canvas"
+        );
+
+
+    scaledCanvas.width =
+        width;
+
+
+    scaledCanvas.height =
+        height;
 
 
     const ctx =
-        canvas.getContext("2d");
+        scaledCanvas.getContext(
+            "2d"
+        );
 
-
-    // --------------------------------------------------------
-    // High quality image scaling
-    // --------------------------------------------------------
 
     ctx.imageSmoothingEnabled =
         true;
@@ -142,72 +204,85 @@ function createScaledCanvas(
         sourceCanvas,
         0,
         0,
-        canvas.width,
-        canvas.height
+        width,
+        height
     );
 
 
-    return canvas;
+    return scaledCanvas;
 }
 
 
 // ============================================================
-// FIND BEST JPEG
+// COMPRESS PAN / AADHAAR CANVAS
 //
-// Strategy:
+// REQUIREMENT:
+//     Generated document MUST be < 80 KB.
 //
-//     scale 1.00
-//         quality 0.88 -> 0.58
+// PROCESS:
+//     1. Try high JPEG quality.
+//     2. Reduce quality gradually.
+//     3. If still too large, reduce document dimensions.
+//     4. Retry compression.
+//     5. If still impossible, throw an error.
 //
-//     scale 0.95
-//         quality 0.88 -> 0.58
+// RETURN:
 //
-//     scale 0.90
-//         quality 0.88 -> 0.58
-//
-//     ...
-//
-// The FIRST valid result is returned.
-//
-// Therefore the highest possible resolution and quality
-// are preserved while staying below 80 KB.
+//     {
+//         blob,
+//         size,
+//         sizeKB,
+//         quality,
+//         scale,
+//         width,
+//         height
+//     }
 // ============================================================
 
 async function compressCanvas(
     sourceCanvas
 ) {
 
+    if (
+        !sourceCanvas ||
+        !sourceCanvas.width ||
+        !sourceCanvas.height
+    ) {
+
+        throw new Error(
+            "Invalid canvas supplied for compression."
+        );
+    }
+
+
+    const maxBytes =
+        IMAGE_EXPORT_CONFIG.maxBytes;
+
+
     let scale =
-        IMAGE_EXPORT_CONFIG.maxScale;
+        1;
 
 
-    let bestResult =
-        null;
+    let workingCanvas =
+        sourceCanvas;
 
+
+    // ========================================================
+    // TRY DIFFERENT SCALES
+    // ========================================================
 
     while (
         scale >=
         IMAGE_EXPORT_CONFIG.minScale
     ) {
 
-        // ----------------------------------------------------
-        // Create temporary scaled canvas
-        // ----------------------------------------------------
-
-        const workingCanvas =
-            createScaledCanvas(
-                sourceCanvas,
-                scale
-            );
-
-
-        // ----------------------------------------------------
-        // Start from high JPEG quality
-        // ----------------------------------------------------
-
         let quality =
             IMAGE_EXPORT_CONFIG.maxQuality;
 
+
+        // ====================================================
+        // TRY DIFFERENT JPEG QUALITIES
+        // ====================================================
 
         while (
             quality >=
@@ -224,89 +299,97 @@ async function compressCanvas(
             if (!blob) {
 
                 throw new Error(
-                    "Unable to create JPEG image."
+                    "Browser could not create JPEG."
                 );
             }
 
 
-            const result = {
-
-                blob: blob,
-
-                quality: quality,
-
-                scale: scale,
-
-                width: workingCanvas.width,
-
-                height: workingCanvas.height
-            };
-
-
-            // ------------------------------------------------
-            // Keep the latest result as fallback
-            // ------------------------------------------------
-
-            bestResult =
-                result;
-
-
-            // ------------------------------------------------
-            // SUCCESS
+            // =================================================
+            // STRICT SIZE CHECK
             //
-            // Strictly less than 80 KB.
-            // ------------------------------------------------
+            // IMPORTANT:
+            // Must be < 80 KB, NOT <= 80 KB.
+            // =================================================
 
             if (
                 blob.size <
-                IMAGE_EXPORT_CONFIG.maxBytes
+                maxBytes
             ) {
 
-                return result;
+                return {
+
+                    blob,
+
+                    size:
+                        blob.size,
+
+                    sizeKB:
+                        blob.size / 1024,
+
+                    quality,
+
+                    scale,
+
+                    width:
+                        workingCanvas.width,
+
+                    height:
+                        workingCanvas.height
+                };
             }
 
 
-            // ------------------------------------------------
-            // Reduce quality
-            // ------------------------------------------------
-
-            quality =
-                Number(
-                    (
-                        quality - 0.04
-                    ).toFixed(2)
-                );
+            quality -=
+                IMAGE_EXPORT_CONFIG.qualityStep;
         }
 
 
-        // ----------------------------------------------------
-        // Quality alone wasn't enough.
+        // ====================================================
+        // Quality was not enough.
         //
-        // Reduce resolution slightly and try again.
-        // ----------------------------------------------------
+        // Reduce PAN / Aadhaar dimensions and retry.
+        // ====================================================
 
-        scale =
-            Number(
-                (
-                    scale -
-                    IMAGE_EXPORT_CONFIG.scaleStep
-                ).toFixed(2)
+        scale *=
+            IMAGE_EXPORT_CONFIG.scaleStep;
+
+
+        if (
+            scale <
+            IMAGE_EXPORT_CONFIG.minScale
+        ) {
+
+            break;
+        }
+
+
+        workingCanvas =
+            createScaledCanvas(
+                sourceCanvas,
+                scale
             );
     }
 
 
     // ========================================================
-    // FINAL FALLBACK
+    // STRICT FAILURE
     //
-    // This should rarely be reached.
+    // Never return an oversized document.
     // ========================================================
 
-    return bestResult;
+    throw new Error(
+        "Generated document could not be compressed below 80 KB."
+    );
 }
 
 
 // ============================================================
 // DOWNLOAD CANVAS
+//
+// PURPOSE:
+//     Manual PAN / Aadhaar download.
+//
+//     Uses the same strict <80 KB compression used by ZIP.
 // ============================================================
 
 async function downloadCanvas(
@@ -314,195 +397,572 @@ async function downloadCanvas(
     filename
 ) {
 
-    try {
-
-        // ----------------------------------------------------
-        // Compress
-        // ----------------------------------------------------
-
-        const result =
-            await compressCanvas(
-                canvas
-            );
-
-
-        if (
-            !result ||
-            !result.blob
-        ) {
-
-            throw new Error(
-                "JPEG generation failed."
-            );
-        }
-
-
-        // ----------------------------------------------------
-        // Verify size
-        // ----------------------------------------------------
-
-        const sizeBytes =
-            result.blob.size;
-
-
-        const sizeKB =
-            (
-                sizeBytes /
-                1024
-            ).toFixed(1);
-
-
-        // ----------------------------------------------------
-        // Safety check
-        // ----------------------------------------------------
-
-        if (
-            sizeBytes >=
-            IMAGE_EXPORT_CONFIG.maxBytes
-        ) {
-
-            console.error(
-                `Unable to meet 80 KB limit. ` +
-                `Generated size: ${sizeKB} KB`
-            );
-
-            throw new Error(
-                `Unable to compress image below ` +
-                `${IMAGE_EXPORT_CONFIG.maxBytes / 1024} KB.`
-            );
-        }
-
-
-        // ----------------------------------------------------
-        // Create download URL
-        // ----------------------------------------------------
-
-        const url =
-            URL.createObjectURL(
-                result.blob
-            );
-
-
-        const link =
-            document.createElement("a");
-
-
-        link.href =
-            url;
-
-
-        link.download =
-            filename;
-
-
-        document.body.appendChild(
-            link
+    const result =
+        await compressCanvas(
+            canvas
         );
 
 
-        link.click();
+    if (
+        result.blob.size >=
+        IMAGE_EXPORT_CONFIG.maxBytes
+    ) {
+
+        throw new Error(
+            "Generated image is not below 80 KB."
+        );
+    }
 
 
-        link.remove();
+    const url =
+        URL.createObjectURL(
+            result.blob
+        );
 
 
-        // ----------------------------------------------------
-        // Release object URL
-        // ----------------------------------------------------
+    const anchor =
+        document.createElement(
+            "a"
+        );
 
-        setTimeout(
-            () => {
 
-                URL.revokeObjectURL(
-                    url
+    anchor.href =
+        url;
+
+
+    anchor.download =
+        filename;
+
+
+    document.body.appendChild(
+        anchor
+    );
+
+
+    anchor.click();
+
+
+    anchor.remove();
+
+
+    setTimeout(
+        () => {
+
+            URL.revokeObjectURL(
+                url
+            );
+
+        },
+        1000
+    );
+
+
+    return result;
+}
+
+
+// ============================================================
+// LOAD IMAGE FROM DATA URL
+// ============================================================
+
+function loadImageFromDataUrl(
+    dataUrl
+) {
+
+    return new Promise(
+        (
+            resolve,
+            reject
+        ) => {
+
+            if (!dataUrl) {
+
+                reject(
+                    new Error(
+                        "Photo data is empty."
+                    )
                 );
 
-            },
-            1000
-        );
+                return;
+            }
 
 
-        // ----------------------------------------------------
-        // Debug information
-        // ----------------------------------------------------
-
-        console.log(
-            "========================================"
-        );
+            const image =
+                new Image();
 
 
-        console.log(
-            "OCR IMAGE EXPORT"
-        );
+            image.onload =
+                () => {
+
+                    if (
+                        !image.naturalWidth ||
+                        !image.naturalHeight
+                    ) {
+
+                        reject(
+                            new Error(
+                                "Photo has invalid dimensions."
+                            )
+                        );
+
+                        return;
+                    }
 
 
-        console.log(
-            "========================================"
-        );
+                    resolve(
+                        image
+                    );
+                };
 
 
-        console.log(
-            `File: ${filename}`
-        );
+            image.onerror =
+                () => {
+
+                    reject(
+                        new Error(
+                            "Could not load uploaded photo."
+                        )
+                    );
+                };
 
 
-        console.log(
-            `Size: ${sizeKB} KB`
-        );
-
-
-        console.log(
-            `Quality: ${result.quality}`
-        );
-
-
-        console.log(
-            `Scale: ${result.scale}`
-        );
-
-
-        console.log(
-            `Resolution: ` +
-            `${result.width}x${result.height}`
-        );
-
-
-        console.log(
-            "========================================"
-        );
-
-
-        return {
-
-            blob:
-                result.blob,
-
-            sizeBytes:
-                sizeBytes,
-
-            sizeKB:
-                Number(sizeKB),
-
-            quality:
-                result.quality,
-
-            scale:
-                result.scale,
-
-            width:
-                result.width,
-
-            height:
-                result.height
-        };
-
-    } catch (error) {
-
-        console.error(
-            "Image export failed:",
-            error
-        );
-
-        throw error;
-    }
+            image.src =
+                dataUrl;
+        }
+    );
 }
+
+
+// ============================================================
+// CREATE 900 x 1200 PHOTO CANVAS
+//
+// PURPOSE:
+//     Normalize every uploaded photo to exactly:
+//
+//         WIDTH  = 900
+//         HEIGHT = 1200
+//
+// BEHAVIOR:
+//     - Keeps original aspect ratio.
+//     - Uses cover/crop.
+//     - Never stretches the photo.
+//     - Uses high-quality image smoothing.
+// ============================================================
+
+async function createNormalizedPhotoCanvas(
+    photoDataUrl
+) {
+
+    const image =
+        await loadImageFromDataUrl(
+            photoDataUrl
+        );
+
+
+    const canvas =
+        document.createElement(
+            "canvas"
+        );
+
+
+    canvas.width =
+        PHOTO_EXPORT_CONFIG.width;
+
+
+    canvas.height =
+        PHOTO_EXPORT_CONFIG.height;
+
+
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
+
+
+    // ========================================================
+    // WHITE BACKGROUND
+    //
+    // Useful when uploaded PNG contains transparency.
+    // ========================================================
+
+    ctx.fillStyle =
+        "#ffffff";
+
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    const sourceWidth =
+        image.naturalWidth;
+
+
+    const sourceHeight =
+        image.naturalHeight;
+
+
+    const targetWidth =
+        PHOTO_EXPORT_CONFIG.width;
+
+
+    const targetHeight =
+        PHOTO_EXPORT_CONFIG.height;
+
+
+    const sourceRatio =
+        sourceWidth /
+        sourceHeight;
+
+
+    const targetRatio =
+        targetWidth /
+        targetHeight;
+
+
+    let drawWidth;
+
+    let drawHeight;
+
+    let drawX;
+
+    let drawY;
+
+
+    // ========================================================
+    // COVER / CROP CALCULATION
+    // ========================================================
+
+    if (
+        sourceRatio >
+        targetRatio
+    ) {
+
+        // ----------------------------------------------------
+        // Source is wider than 900:1200.
+        //
+        // Fit height and crop left/right.
+        // ----------------------------------------------------
+
+        drawHeight =
+            targetHeight;
+
+
+        drawWidth =
+            targetHeight *
+            sourceRatio;
+
+
+        drawX =
+            (
+                targetWidth -
+                drawWidth
+            ) / 2;
+
+
+        drawY =
+            0;
+
+    } else {
+
+        // ----------------------------------------------------
+        // Source is taller/narrower than 900:1200.
+        //
+        // Fit width and crop top/bottom.
+        // ----------------------------------------------------
+
+        drawWidth =
+            targetWidth;
+
+
+        drawHeight =
+            targetWidth /
+            sourceRatio;
+
+
+        drawX =
+            0;
+
+
+        drawY =
+            (
+                targetHeight -
+                drawHeight
+            ) / 2;
+    }
+
+
+    // ========================================================
+    // HIGH QUALITY IMAGE SCALING
+    // ========================================================
+
+    ctx.imageSmoothingEnabled =
+        true;
+
+
+    ctx.imageSmoothingQuality =
+        "high";
+
+
+    // ========================================================
+    // DRAW NORMALIZED PHOTO
+    // ========================================================
+
+    ctx.drawImage(
+        image,
+        drawX,
+        drawY,
+        drawWidth,
+        drawHeight
+    );
+
+
+    return canvas;
+}
+
+
+// ============================================================
+// PREPARE PHOTO FOR ZIP
+//
+// FINAL PHOTO REQUIREMENTS:
+//
+//     Resolution:
+//         900 x 1200
+//
+//     Format:
+//         JPEG
+//
+//     Size:
+//         STRICTLY < 80 KB
+//
+// IMPORTANT:
+//     Unlike document compression, photo resolution is NEVER
+//     reduced.
+//
+//     If the photo cannot reach <80 KB at 900x1200, this
+//     function throws an error.
+//
+//     This prevents an oversized photo from entering ZIP.
+// ============================================================
+
+async function preparePhotoForZip(
+    photoDataUrl
+) {
+
+    if (!photoDataUrl) {
+
+        return null;
+    }
+
+
+    // ========================================================
+    // CREATE EXACT 900 x 1200 CANVAS
+    // ========================================================
+
+    const canvas =
+        await createNormalizedPhotoCanvas(
+            photoDataUrl
+        );
+
+
+    // ========================================================
+    // STRICT PHOTO SIZE
+    // ========================================================
+
+    const maxBytes =
+        PHOTO_EXPORT_CONFIG.maxBytes;
+
+
+    let quality =
+        PHOTO_EXPORT_CONFIG.maxQuality;
+
+
+    let lastBlob =
+        null;
+
+
+    // ========================================================
+    // JPEG QUALITY LOOP
+    //
+    // Resolution stays exactly 900x1200.
+    // ========================================================
+
+    while (
+        quality >=
+        PHOTO_EXPORT_CONFIG.minQuality
+    ) {
+
+        const blob =
+            await canvasToJpgBlob(
+                canvas,
+                quality
+            );
+
+
+        if (!blob) {
+
+            throw new Error(
+                "Could not create normalized photo JPEG."
+            );
+        }
+
+
+        lastBlob =
+            blob;
+
+
+        // ====================================================
+        // STRICT VALIDATION
+        //
+        // 80 KB is NOT accepted.
+        //
+        // Valid:
+        //     79.99 KB
+        //
+        // Invalid:
+        //     80.00 KB
+        //     81 KB
+        //     100 KB
+        // ====================================================
+
+        if (
+            blob.size <
+            maxBytes
+        ) {
+
+            // -----------------------------------------------
+            // Final dimension validation
+            // -----------------------------------------------
+
+            if (
+                canvas.width !== 900 ||
+                canvas.height !== 1200
+            ) {
+
+                throw new Error(
+                    "Photo resolution validation failed. " +
+                    "Required resolution is exactly 900 x 1200."
+                );
+            }
+
+
+            // -----------------------------------------------
+            // Final size validation
+            // -----------------------------------------------
+
+            if (
+                blob.size >=
+                maxBytes
+            ) {
+
+                throw new Error(
+                    "Photo size validation failed. " +
+                    "Photo must be strictly below 80 KB."
+                );
+            }
+
+
+            return blob;
+        }
+
+
+        // ----------------------------------------------------
+        // Reduce JPEG quality.
+        // ----------------------------------------------------
+
+        quality -=
+            PHOTO_EXPORT_CONFIG.qualityStep;
+    }
+
+
+    // ========================================================
+    // STRICT FAILURE
+    //
+    // DO NOT return lastBlob.
+    //
+    // Returning lastBlob would allow an oversized photo
+    // into the ZIP.
+    // ========================================================
+
+    const lastSizeKB =
+        lastBlob
+            ? (
+                lastBlob.size /
+                1024
+            ).toFixed(1)
+            : "unknown";
+
+
+    throw new Error(
+        "Photo size validation failed. " +
+        `The normalized 900x1200 photo is still ${lastSizeKB} KB. ` +
+        "The photo must be strictly below 80 KB."
+    );
+}
+
+
+// ============================================================
+// OPTIONAL PHOTO VALIDATION HELPER
+//
+// PURPOSE:
+//     Can be used anywhere in the application to validate
+//     an already-generated photo Blob.
+//
+// RETURNS:
+//     true if:
+//         - JPEG
+//         - <80 KB
+//
+// Throws an error otherwise.
+// ============================================================
+
+function validatePhotoBlob(
+    blob
+) {
+
+    if (!blob) {
+
+        throw new Error(
+            "Photo Blob is empty."
+        );
+    }
+
+
+    if (
+        blob.size >=
+        PHOTO_EXPORT_CONFIG.maxBytes
+    ) {
+
+        throw new Error(
+            "Photo must be strictly below 80 KB."
+        );
+    }
+
+
+    if (
+        blob.type &&
+        blob.type !== "image/jpeg"
+    ) {
+
+        throw new Error(
+            "Generated photo must be JPEG."
+        );
+    }
+
+
+    return true;
+}
+
+
+// ============================================================
+// EXPORT CONFIGURATION FOR DEBUGGING
+//
+// Useful from browser console:
+//
+//     PHOTO_EXPORT_CONFIG
+//     IMAGE_EXPORT_CONFIG
+//
+// ============================================================

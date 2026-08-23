@@ -2,31 +2,63 @@
 // FILE: js/app.js
 //
 // PURPOSE:
-//     Main application controller for the synthetic PAN /
-//     Aadhaar OCR test data generator.
+//     Main controller for the Synthetic PAN / Aadhaar OCR
+//     Test Data Generator.
 //
 // RESPONSIBILITIES:
-//     1. Manual data generation.
-//     2. Manual document preview.
-//     3. Manual JPEG download.
-//     4. Excel batch processing.
-//     5. Bulk photo management.
-//     6. PAN / Aadhaar ZIP generation.
-//     7. Combined PAN + Aadhaar ZIP generation.
-//     8. Use the common image compression logic so that
-//        generated JPEG files stay below 80 KB.
 //
-// IMPORTANT:
+//     MANUAL MODE
+//     -----------------------------
+//     - Accept manual test data.
+//     - Generate random test data.
+//     - Render PAN / Aadhaar preview.
+//     - Download generated card.
+//
+//     BATCH MODE
+//     -----------------------------
+//     - Read Excel records.
+//     - Match photos.
+//     - Generate PAN cards.
+//     - Generate Aadhaar cards.
+//     - Normalize photos to 900x1200.
+//     - Create individual ZIP files.
+//     - Create combined ZIP file.
+//
+// ZIP STRUCTURE
+//     -----------------------------
+//
+//     All_Synthetic_Test_Cards.zip
+//
+//     ├── PAN_Cards/
+//     ├── Aadhaar_Cards/
+//     └── Photos/
+//
+// IMAGE REQUIREMENTS
+//     -----------------------------
+//
+//     PAN / Aadhaar:
+//         < 80 KB
+//
+//     Photos:
+//         exactly 900 x 1200 pixels
+//
+// DEPENDENCIES:
+//
+//     data-generator.js
+//         -> random test data
+//
 //     document-renderer.js
-//         -> creates the document canvas.
+//         -> renders PAN / Aadhaar canvas
 //
 //     image-export.js
-//         -> compresses the canvas to the required JPEG size.
+//         -> JPEG compression
+//         -> photo normalization
 //
-//     app.js
-//         -> controls the application and ZIP generation.
+//     XLSX
+//         -> Excel processing
 //
-//     No document rendering logic is duplicated here.
+//     JSZip
+//         -> ZIP generation
 // ============================================================
 
 
@@ -38,9 +70,14 @@ document.addEventListener(
         // DOM REFERENCES
         // ====================================================
 
-        const $ = id =>
-            document.getElementById(id);
+        const $ =
+            id =>
+                document.getElementById(id);
 
+
+        // ----------------------------------------------------
+        // Mode
+        // ----------------------------------------------------
 
         const modeManualBtn =
             $("modeManualBtn");
@@ -54,6 +91,10 @@ document.addEventListener(
         const batchSection =
             $("batchSection");
 
+
+        // ----------------------------------------------------
+        // Manual form
+        // ----------------------------------------------------
 
         const docTypeSelect =
             $("docType");
@@ -80,6 +121,10 @@ document.addEventListener(
             $("photoInput");
 
 
+        // ----------------------------------------------------
+        // Manual actions
+        // ----------------------------------------------------
+
         const generateBtn =
             $("generateBtn");
 
@@ -92,6 +137,11 @@ document.addEventListener(
         const downloadCardBtn =
             $("downloadCardBtn");
 
+
+        // ----------------------------------------------------
+        // Preview
+        // ----------------------------------------------------
+
         const canvas =
             $("cardCanvas");
 
@@ -101,6 +151,10 @@ document.addEventListener(
         const manualStatus =
             $("manualStatus");
 
+
+        // ----------------------------------------------------
+        // Excel
+        // ----------------------------------------------------
 
         const uploadExcelTrigger =
             $("uploadExcelTrigger");
@@ -113,6 +167,11 @@ document.addEventListener(
 
         const downloadTemplateBtn =
             $("downloadTemplateBtn");
+
+
+        // ----------------------------------------------------
+        // Photos
+        // ----------------------------------------------------
 
         const bulkPhotoUpload =
             $("bulkPhotoUpload");
@@ -127,6 +186,10 @@ document.addEventListener(
             $("photoUploadStatus");
 
 
+        // ----------------------------------------------------
+        // Batch status
+        // ----------------------------------------------------
+
         const batchStatus =
             $("batchStatus");
 
@@ -139,8 +202,18 @@ document.addEventListener(
         const missingCount =
             $("missingCount");
 
+
+        // ----------------------------------------------------
+        // Batch table
+        // ----------------------------------------------------
+
         const batchTableBody =
             $("batchTableBody");
+
+
+        // ----------------------------------------------------
+        // Batch download buttons
+        // ----------------------------------------------------
 
         const downloadAllPan =
             $("downloadAllPan");
@@ -156,22 +229,38 @@ document.addEventListener(
         // APPLICATION STATE
         // ====================================================
 
-        let currentPhotoDataUrl = null;
+        let currentPhotoDataUrl =
+            null;
 
-        let hasGeneratedManual = false;
 
-        let parsedRecords = [];
+        let hasGeneratedManual =
+            false;
 
-        let bulkPhotos = {};
+
+        let parsedRecords =
+            [];
+
+
+        let bulkPhotos =
+            {};
 
 
         // ====================================================
-        // LOAD PHOTOS PROVIDED BY STREAMLIT
+        // CONFIGURATION
+        // ====================================================
+
+        const MAX_CARD_BYTES =
+            80 * 1024;
+
+
+        // ====================================================
+        // LOAD STREAMLIT PHOTOS
         // ====================================================
 
         if (
             window.BULK_PHOTOS &&
-            typeof window.BULK_PHOTOS === "object"
+            typeof window.BULK_PHOTOS ===
+                "object"
         ) {
 
             bulkPhotos = {
@@ -181,29 +270,29 @@ document.addEventListener(
 
 
         // ====================================================
-        // IMAGE EXPORT CONFIGURATION
+        // NORMALIZE FILE NAME
         // ====================================================
 
-        const MAX_IMAGE_BYTES =
-            80 * 1024;
+        function normalizeFileName(
+            value
+        ) {
+
+            return String(
+                value || ""
+            )
+                .trim()
+                .replace(
+                    /\\/g,
+                    "/"
+                )
+                .split("/")
+                .pop()
+                .toLowerCase();
+        }
 
 
         // ====================================================
-        // NORMALIZE PHOTO FILE NAME
-        // ====================================================
-
-        const normalizeFileName =
-            value =>
-                String(value || "")
-                    .trim()
-                    .replace(/\\/g, "/")
-                    .split("/")
-                    .pop()
-                    .toLowerCase();
-
-
-        // ====================================================
-        // FIND BULK PHOTO
+        // FIND PHOTO FOR RECORD
         // ====================================================
 
         function findBulkPhoto(
@@ -224,28 +313,33 @@ document.addEventListener(
 
 
             // ------------------------------------------------
-            // Match using Photo column
+            // First attempt:
+            // Match Photo column.
             // ------------------------------------------------
 
             if (requested) {
 
-                const key =
+                const matchedKey =
                     keys.find(
-                        item =>
-                            normalizeFileName(item) ===
+                        key =>
+                            normalizeFileName(
+                                key
+                            ) ===
                             requested
                     );
 
 
-                if (key) {
+                if (matchedKey) {
 
                     return {
 
                         dataUrl:
-                            bulkPhotos[key],
+                            bulkPhotos[
+                                matchedKey
+                            ],
 
                         filename:
-                            key,
+                            matchedKey,
 
                         reason:
                             "Matched Photo column"
@@ -255,11 +349,14 @@ document.addEventListener(
 
 
             // ------------------------------------------------
-            // Fallback: match using person name
+            // Second attempt:
+            // Match person name.
             // ------------------------------------------------
 
             const normalizedName =
-                String(name || "")
+                String(
+                    name || ""
+                )
                     .toLowerCase()
                     .replace(
                         /\.[^/.]+$/,
@@ -273,10 +370,12 @@ document.addEventListener(
 
             if (normalizedName) {
 
-                const key =
+                const matchedKey =
                     keys.find(
-                        item =>
-                            String(item)
+                        key =>
+                            String(
+                                key
+                            )
                                 .toLowerCase()
                                 .replace(
                                     /\.[^/.]+$/,
@@ -290,15 +389,17 @@ document.addEventListener(
                     );
 
 
-                if (key) {
+                if (matchedKey) {
 
                     return {
 
                         dataUrl:
-                            bulkPhotos[key],
+                            bulkPhotos[
+                                matchedKey
+                            ],
 
                         filename:
-                            key,
+                            matchedKey,
 
                         reason:
                             "Matched person name"
@@ -306,10 +407,6 @@ document.addEventListener(
                 }
             }
 
-
-            // ------------------------------------------------
-            // No photo found
-            // ------------------------------------------------
 
             return {
 
@@ -331,43 +428,47 @@ document.addEventListener(
         // MODE SWITCHING
         // ====================================================
 
-        function setMode(batch) {
+        function setMode(
+            batchMode
+        ) {
 
             manualSection.style.display =
-                batch
+                batchMode
                     ? "none"
                     : "block";
 
 
             batchSection.style.display =
-                batch
+                batchMode
                     ? "block"
                     : "none";
 
 
-            modeBatchBtn.classList.toggle(
+            modeManualBtn.classList.toggle(
                 "secondary",
-                !batch
+                batchMode
             );
 
 
-            modeManualBtn.classList.toggle(
+            modeBatchBtn.classList.toggle(
                 "secondary",
-                batch
+                !batchMode
             );
         }
 
 
         modeManualBtn.onclick =
-            () => setMode(false);
+            () =>
+                setMode(false);
 
 
         modeBatchBtn.onclick =
-            () => setMode(true);
+            () =>
+                setMode(true);
 
 
         // ====================================================
-        // MANUAL PHOTO INPUT
+        // MANUAL PHOTO
         // ====================================================
 
         photoInput.onchange =
@@ -413,10 +514,10 @@ document.addEventListener(
 
 
         // ====================================================
-        // BUILD MANUAL PERSON DATA
+        // BUILD MANUAL PERSON OBJECT
         // ====================================================
 
-        function manualPerson() {
+        function getManualPerson() {
 
             const type =
                 docTypeSelect.value;
@@ -440,6 +541,9 @@ document.addEventListener(
                 gender:
                     inputGender.value,
 
+                address:
+                    inputAddress.value.trim(),
+
                 pan:
                     type === "PAN"
                         ? (
@@ -454,10 +558,7 @@ document.addEventListener(
                             number ||
                             generateAadharNumber()
                         )
-                        : "",
-
-                address:
-                    inputAddress.value.trim()
+                        : ""
             };
         }
 
@@ -469,7 +570,7 @@ document.addEventListener(
         async function renderManual() {
 
             const person =
-                manualPerson();
+                getManualPerson();
 
 
             if (
@@ -477,8 +578,8 @@ document.addEventListener(
                 !person.parentName &&
                 !person.dob &&
                 !person.address &&
-                !inputNumber.value &&
-                !currentPhotoDataUrl
+                !person.pan &&
+                !person.aadhaar
             ) {
 
                 canvas
@@ -551,7 +652,7 @@ document.addEventListener(
 
 
         // ====================================================
-        // RANDOMIZE MANUAL DATA
+        // RANDOMIZE DATA
         // ====================================================
 
         randomizeBtn.onclick =
@@ -600,25 +701,34 @@ document.addEventListener(
         clearBtn.onclick =
             () => {
 
-                inputName.value = "";
+                inputName.value =
+                    "";
 
-                inputFather.value = "";
+                inputFather.value =
+                    "";
 
-                inputDob.value = "";
+                inputDob.value =
+                    "";
 
-                inputGender.value = "";
+                inputGender.value =
+                    "";
 
-                inputNumber.value = "";
+                inputNumber.value =
+                    "";
 
-                inputAddress.value = "";
+                inputAddress.value =
+                    "";
 
-                photoInput.value = "";
+                photoInput.value =
+                    "";
 
                 currentPhotoDataUrl =
                     null;
 
+
                 hasGeneratedManual =
                     false;
+
 
                 manualStatus.textContent =
                     "";
@@ -644,7 +754,7 @@ document.addEventListener(
 
 
         // ====================================================
-        // LIVE MANUAL PREVIEW
+        // LIVE PREVIEW
         // ====================================================
 
         [
@@ -675,26 +785,14 @@ document.addEventListener(
 
 
         // ====================================================
-        // COMPRESS CANVAS FOR EXPORT
+        // COMPRESS DOCUMENT CANVAS
         //
-        // Uses compressCanvas() from image-export.js.
-        //
-        // This is the IMPORTANT FIX.
-        //
-        // Batch ZIP generation must NOT use:
-        //
-        //     canvas.toDataURL("image/jpeg", .92)
-        //
-        // because that bypasses the 80 KB compressor.
+        // Uses image-export.js.
         // ====================================================
 
         async function getCompressedImageBlob(
             sourceCanvas
         ) {
-
-            // ------------------------------------------------
-            // image-export.js must be loaded before app.js.
-            // ------------------------------------------------
 
             if (
                 typeof compressCanvas !==
@@ -702,7 +800,7 @@ document.addEventListener(
             ) {
 
                 throw new Error(
-                    "Image compression module is not available."
+                    "Image compression module is not loaded."
                 );
             }
 
@@ -724,22 +822,18 @@ document.addEventListener(
             }
 
 
-            // ------------------------------------------------
-            // Strict 80 KB validation
-            // ------------------------------------------------
-
             if (
                 result.blob.size >=
-                MAX_IMAGE_BYTES
+                MAX_CARD_BYTES
             ) {
 
                 throw new Error(
-                    `Generated image is ` +
+                    `Generated card is ` +
                     `${(
                         result.blob.size /
                         1024
-                    ).toFixed(1)} KB, ` +
-                    `which exceeds the 80 KB limit.`
+                    ).toFixed(1)} KB. ` +
+                    `Required size is below 80 KB.`
                 );
             }
 
@@ -751,24 +845,11 @@ document.addEventListener(
         // ====================================================
         // MANUAL DOWNLOAD
         //
-        // FIX:
-        //     Previously this used canvas.toDataURL(.92).
-        //
-        //     It now uses the same compression pipeline as
-        //     batch ZIP generation.
+        // Uses the same <80 KB compression used by ZIP files.
         // ====================================================
 
         downloadCardBtn.onclick =
             async () => {
-
-                if (
-                    !canvas.width ||
-                    !canvas.height
-                ) {
-
-                    return;
-                }
-
 
                 try {
 
@@ -777,7 +858,7 @@ document.addEventListener(
 
 
                     manualStatus.textContent =
-                        "Optimizing image size...";
+                        "Optimizing image...";
 
 
                     const result =
@@ -792,27 +873,29 @@ document.addEventListener(
                         );
 
 
-                    const link =
-                        document.createElement("a");
+                    const anchor =
+                        document.createElement(
+                            "a"
+                        );
 
 
-                    link.href =
+                    anchor.href =
                         url;
 
 
-                    link.download =
-                        `synthetic_${docTypeSelect.value}_${Date.now()}.jpg`;
+                    anchor.download =
+                        `Synthetic_${docTypeSelect.value}_${Date.now()}.jpg`;
 
 
                     document.body.appendChild(
-                        link
+                        anchor
                     );
 
 
-                    link.click();
+                    anchor.click();
 
 
-                    link.remove();
+                    anchor.remove();
 
 
                     setTimeout(
@@ -828,7 +911,7 @@ document.addEventListener(
 
 
                     manualStatus.textContent =
-                        `JPEG ready: ` +
+                        `Downloaded: ` +
                         `${(
                             result.blob.size /
                             1024
@@ -837,14 +920,14 @@ document.addEventListener(
                 } catch (error) {
 
                     console.error(
-                        "Manual image export failed:",
+                        "Manual download failed:",
                         error
                     );
 
 
                     manualStatus.textContent =
                         error.message ||
-                        "Could not export image.";
+                        "Could not download image.";
 
                 } finally {
 
@@ -855,20 +938,10 @@ document.addEventListener(
 
 
         // ====================================================
-        // BULK PHOTO MANAGEMENT
+        // READ IMAGE FILE
         // ====================================================
 
-        function registerPhoto(
-            fileName,
-            dataUrl
-        ) {
-
-            bulkPhotos[fileName] =
-                dataUrl;
-        }
-
-
-        async function readImageFile(
+        function readImageFile(
             file
         ) {
 
@@ -890,7 +963,12 @@ document.addEventListener(
 
 
                     reader.onerror =
-                        reject;
+                        () =>
+                            reject(
+                                new Error(
+                                    "Could not read image."
+                                )
+                            );
 
 
                     reader.readAsDataURL(
@@ -902,14 +980,28 @@ document.addEventListener(
 
 
         // ====================================================
-        // LOAD MULTIPLE PHOTO FILES
+        // REGISTER PHOTO
+        // ====================================================
+
+        function registerPhoto(
+            filename,
+            dataUrl
+        ) {
+
+            bulkPhotos[filename] =
+                dataUrl;
+        }
+
+
+        // ====================================================
+        // BULK PHOTO UPLOAD
         // ====================================================
 
         async function loadPhotoFiles(
             files
         ) {
 
-            let count =
+            let added =
                 0;
 
 
@@ -928,20 +1020,26 @@ document.addEventListener(
                 }
 
 
+                const dataUrl =
+                    await readImageFile(
+                        file
+                    );
+
+
                 registerPhoto(
                     file.name,
-                    await readImageFile(file)
+                    dataUrl
                 );
 
 
-                count++;
+                added++;
             }
 
 
             photoUploadStatus.textContent =
-                `${count} image(s) added. ` +
+                `${added} photo(s) added. ` +
                 `${Object.keys(bulkPhotos).length} ` +
-                `total available.`;
+                `photo(s) available.`;
         }
 
 
@@ -963,7 +1061,7 @@ document.addEventListener(
 
 
         // ====================================================
-        // LOAD PHOTOS FROM ZIP
+        // BULK PHOTO ZIP UPLOAD
         // ====================================================
 
         bulkZipUpload.onchange =
@@ -993,17 +1091,26 @@ document.addEventListener(
 
                     for (
                         const [
-                            name,
+                            path,
                             entry
                         ] of
-                        Object.entries(zip.files)
+                        Object.entries(
+                            zip.files
+                        )
                     ) {
 
                         if (
-                            entry.dir ||
+                            entry.dir
+                        ) {
+
+                            continue;
+                        }
+
+
+                        if (
                             !(
                                 /\.(jpe?g|png|webp|gif)$/i
-                            ).test(name)
+                            ).test(path)
                         ) {
 
                             continue;
@@ -1016,24 +1123,30 @@ document.addEventListener(
                             );
 
 
+                        const photoFile =
+                            new File(
+                                [
+                                    blob
+                                ],
+                                path
+                                    .split("/")
+                                    .pop(),
+                                {
+                                    type:
+                                        blob.type ||
+                                        "image/jpeg"
+                                }
+                            );
+
+
                         const dataUrl =
                             await readImageFile(
-                                new File(
-                                    [
-                                        blob
-                                    ],
-                                    name,
-                                    {
-                                        type:
-                                            blob.type ||
-                                            "image/jpeg"
-                                    }
-                                )
+                                photoFile
                             );
 
 
                         registerPhoto(
-                            name.split("/").pop(),
+                            photoFile.name,
                             dataUrl
                         );
 
@@ -1043,9 +1156,9 @@ document.addEventListener(
 
 
                     photoUploadStatus.textContent =
-                        `${count} image(s) extracted. ` +
+                        `${count} photo(s) extracted. ` +
                         `${Object.keys(bulkPhotos).length} ` +
-                        `total available.`;
+                        `photo(s) available.`;
 
 
                     if (
@@ -1057,25 +1170,26 @@ document.addEventListener(
 
                 } catch (error) {
 
-                    photoUploadStatus.textContent =
-                        "Could not read the ZIP file.";
-
-
                     console.error(
                         error
                     );
+
+
+                    photoUploadStatus.textContent =
+                        "Could not read photo ZIP.";
                 }
             };
 
 
         // ====================================================
-        // CLEAR UPLOADED PHOTOS
+        // CLEAR PHOTOS
         // ====================================================
 
         clearPhotosBtn.onclick =
             () => {
 
-                bulkPhotos = {};
+                bulkPhotos =
+                    {};
 
 
                 if (
@@ -1109,79 +1223,7 @@ document.addEventListener(
 
 
         // ====================================================
-        // RELINK PHOTOS TO RECORDS
-        // ====================================================
-
-        function relinkPhotos() {
-
-            parsedRecords.forEach(
-                record => {
-
-                    const match =
-                        findBulkPhoto(
-                            record.photo,
-                            record.name
-                        );
-
-
-                    record.photoDataUrl =
-                        match.dataUrl;
-
-
-                    record.photoFilename =
-                        match.filename;
-
-
-                    record.photoMatchReason =
-                        match.reason;
-                }
-            );
-
-
-            renderBatchTable();
-
-            updateSummary();
-        }
-
-
-        // ====================================================
-        // EXCEL UPLOAD
-        // ====================================================
-
-        uploadExcelTrigger.onclick =
-            () =>
-                excelUpload.click();
-
-
-        // ====================================================
-        // EXCEL VALUE HELPER
-        // ====================================================
-
-        function valueFromRow(
-            row,
-            keys
-        ) {
-
-            for (
-                const key of keys
-            ) {
-
-                if (
-                    row[key] !== undefined &&
-                    String(row[key]).trim() !== ""
-                ) {
-
-                    return row[key];
-                }
-            }
-
-
-            return "";
-        }
-
-
-        // ====================================================
-        // DOWNLOAD SAMPLE EXCEL TEMPLATE
+        // DOWNLOAD SAMPLE EXCEL
         // ====================================================
 
         downloadTemplateBtn.onclick =
@@ -1190,7 +1232,7 @@ document.addEventListener(
                 event.preventDefault();
 
 
-                const data = [
+                const rows = [
 
                     [
                         "Name",
@@ -1223,17 +1265,6 @@ document.addEventListener(
                         "person2.jpg",
                         "",
                         ""
-                    ],
-
-                    [
-                        "TEST PERSON THREE",
-                        "10/04/1997",
-                        "Male",
-                        "78 Main Road, Pune, Maharashtra - 411001",
-                        "TEST PARENT THREE",
-                        "person3.jpg",
-                        "",
-                        "1234 5678 9012"
                     ]
                 ];
 
@@ -1244,44 +1275,8 @@ document.addEventListener(
 
                 const worksheet =
                     XLSX.utils.aoa_to_sheet(
-                        data
+                        rows
                     );
-
-
-                worksheet["!cols"] = [
-
-                    {
-                        wch: 22
-                    },
-
-                    {
-                        wch: 14
-                    },
-
-                    {
-                        wch: 12
-                    },
-
-                    {
-                        wch: 52
-                    },
-
-                    {
-                        wch: 24
-                    },
-
-                    {
-                        wch: 22
-                    },
-
-                    {
-                        wch: 16
-                    },
-
-                    {
-                        wch: 18
-                    }
-                ];
 
 
                 XLSX.utils.book_append_sheet(
@@ -1296,6 +1291,45 @@ document.addEventListener(
                     "ocr-test-data-template.xlsx"
                 );
             };
+
+
+        // ====================================================
+        // EXCEL UPLOAD TRIGGER
+        // ====================================================
+
+        uploadExcelTrigger.onclick =
+            () =>
+                excelUpload.click();
+
+
+        // ====================================================
+        // GET VALUE FROM EXCEL ROW
+        // ====================================================
+
+        function valueFromRow(
+            row,
+            keys
+        ) {
+
+            for (
+                const key of
+                keys
+            ) {
+
+                if (
+                    row[key] !== undefined &&
+                    String(
+                        row[key]
+                    ).trim() !== ""
+                ) {
+
+                    return row[key];
+                }
+            }
+
+
+            return "";
+        }
 
 
         // ====================================================
@@ -1407,14 +1441,14 @@ document.addEventListener(
                                             ).trim();
 
 
-                                        const match =
+                                        const photoMatch =
                                             findBulkPhoto(
                                                 photo,
                                                 name
                                             );
 
 
-                                        const panInput =
+                                        const pan =
                                             String(
                                                 valueFromRow(
                                                     row,
@@ -1427,7 +1461,7 @@ document.addEventListener(
                                             ).trim();
 
 
-                                        const aadhaarInput =
+                                        const aadhaar =
                                             String(
                                                 valueFromRow(
                                                     row,
@@ -1503,34 +1537,24 @@ document.addEventListener(
                                                     .trim()
                                                     .toUpperCase(),
 
+                                            pan:
+                                                pan ||
+                                                generatePANNumber(),
+
+                                            aadhaar:
+                                                aadhaar ||
+                                                generateAadharNumber(),
+
                                             photo,
 
                                             photoDataUrl:
-                                                match.dataUrl,
+                                                photoMatch.dataUrl,
 
                                             photoFilename:
-                                                match.filename,
+                                                photoMatch.filename,
 
                                             photoMatchReason:
-                                                match.reason,
-
-                                            // ------------------------------------------------
-                                            // User-provided PAN is used when present.
-                                            // Otherwise synthetic PAN is generated.
-                                            // ------------------------------------------------
-
-                                            pan:
-                                                panInput ||
-                                                generatePANNumber(),
-
-                                            // ------------------------------------------------
-                                            // User-provided Aadhaar is used when present.
-                                            // Otherwise synthetic Aadhaar is generated.
-                                            // ------------------------------------------------
-
-                                            aadhaar:
-                                                aadhaarInput ||
-                                                generateAadharNumber()
+                                                photoMatch.reason
                                         };
                                     }
                                 );
@@ -1540,11 +1564,13 @@ document.addEventListener(
 
                             updateSummary();
 
-                            batchStatus.textContent =
-                                `Parsed ${parsedRecords.length} record(s).`;
-
-
                             setBatchButtons();
+
+
+                            batchStatus.textContent =
+                                `Parsed ` +
+                                `${parsedRecords.length} ` +
+                                `record(s).`;
 
                         } catch (error) {
 
@@ -1554,7 +1580,7 @@ document.addEventListener(
 
 
                             batchStatus.textContent =
-                                "Could not parse Excel. Check the headers and file format.";
+                                "Could not parse Excel.";
                         }
                     };
 
@@ -1566,7 +1592,43 @@ document.addEventListener(
 
 
         // ====================================================
-        // UPDATE BATCH SUMMARY
+        // RELINK PHOTOS
+        // ====================================================
+
+        function relinkPhotos() {
+
+            parsedRecords.forEach(
+                record => {
+
+                    const match =
+                        findBulkPhoto(
+                            record.photo,
+                            record.name
+                        );
+
+
+                    record.photoDataUrl =
+                        match.dataUrl;
+
+
+                    record.photoFilename =
+                        match.filename;
+
+
+                    record.photoMatchReason =
+                        match.reason;
+                }
+            );
+
+
+            renderBatchTable();
+
+            updateSummary();
+        }
+
+
+        // ====================================================
+        // UPDATE SUMMARY
         // ====================================================
 
         function updateSummary() {
@@ -1593,7 +1655,7 @@ document.addEventListener(
 
 
         // ====================================================
-        // ENABLE / DISABLE BATCH BUTTONS
+        // SET BATCH BUTTON STATE
         // ====================================================
 
         function setBatchButtons() {
@@ -1619,7 +1681,9 @@ document.addEventListener(
         // HTML ESCAPING
         // ====================================================
 
-        function escapeHtml(value) {
+        function escapeHtml(
+            value
+        ) {
 
             return String(
                 value ?? ""
@@ -1652,10 +1716,6 @@ document.addEventListener(
         // ====================================================
 
         function renderBatchTable() {
-
-            recordCount.textContent =
-                parsedRecords.length;
-
 
             if (
                 !parsedRecords.length
@@ -1799,17 +1859,150 @@ document.addEventListener(
 
 
         // ====================================================
-        // GENERATE PAN / AADHAAR ZIP
+        // CREATE SAFE FILE NAME
+        // ====================================================
+
+        function getSafeRecordName(
+            record,
+            index
+        ) {
+
+            return (
+                String(
+                    record.name || ""
+                )
+                    .trim()
+                    .replace(
+                        /\s+/g,
+                        "_"
+                    )
+                    .replace(
+                        /[^a-zA-Z0-9_-]/g,
+                        ""
+                    ) ||
+                `record_${index + 1}`
+            );
+        }
+
+
+        // ====================================================
+        // ADD NORMALIZED PHOTO TO ZIP
         //
-        // IMPORTANT:
-        //     The previous implementation used:
+        // PHOTO REQUIREMENT:
         //
-        //     temp.toDataURL("image/jpeg", .92)
+        //     900 x 1200 pixels
         //
-        //     That produced the 146-157 KB Aadhaar files.
+        // The actual conversion is handled by
+        // preparePhotoForZip() in image-export.js.
+        // ====================================================
+
+        async function addPhotoToZip(
+            photoFolder,
+            record,
+            index
+        ) {
+
+            if (
+                !record.photoDataUrl
+            ) {
+
+                return;
+            }
+
+
+            const photoBlob =
+                await preparePhotoForZip(
+                    record.photoDataUrl
+                );
+
+
+            if (!photoBlob) {
+
+                return;
+            }
+
+
+            const safe =
+                getSafeRecordName(
+                    record,
+                    index
+                );
+
+
+            photoFolder.file(
+                `${index + 1}_${safe}_Photo.jpg`,
+                photoBlob
+            );
+        }
+
+
+        // ====================================================
+        // ADD DOCUMENT TO ZIP
+        // ====================================================
+
+        async function addDocumentToZip(
+            folder,
+            tempCanvas,
+            record,
+            index,
+            type
+        ) {
+
+            // ------------------------------------------------
+            // Render document
+            // ------------------------------------------------
+
+            await drawSyntheticDocument(
+                tempCanvas,
+                record,
+                type,
+                record.photoDataUrl
+            );
+
+
+            // ------------------------------------------------
+            // Compress below 80 KB
+            // ------------------------------------------------
+
+            const result =
+                await getCompressedImageBlob(
+                    tempCanvas
+                );
+
+
+            // ------------------------------------------------
+            // File name
+            // ------------------------------------------------
+
+            const safe =
+                getSafeRecordName(
+                    record,
+                    index
+                );
+
+
+            folder.file(
+                `${index + 1}_${safe}_${type}.jpg`,
+                result.blob
+            );
+
+
+            return result;
+        }
+
+
+        // ====================================================
+        // GENERATE TYPE ZIP
         //
-        //     This version uses getCompressedImageBlob()
-        //     so every image is checked against the 80 KB limit.
+        // PAN ZIP:
+        //
+        //     PAN_Cards/
+        //     Photos/
+        //
+        // Aadhaar ZIP:
+        //
+        //     Aadhaar_Cards/
+        //     Photos/
         // ====================================================
 
         async function generateZipArchive(
@@ -1831,11 +2024,17 @@ document.addEventListener(
                 new JSZip();
 
 
-            const folder =
+            const cardFolder =
                 zip.folder(
                     type === "PAN"
                         ? "PAN_Cards"
                         : "Aadhaar_Cards"
+                );
+
+
+            const photoFolder =
+                zip.folder(
+                    "Photos"
                 );
 
 
@@ -1847,10 +2046,6 @@ document.addEventListener(
 
             try {
 
-                // ------------------------------------------------
-                // Disable buttons during processing
-                // ------------------------------------------------
-
                 downloadAllPan.disabled =
                     true;
 
@@ -1860,10 +2055,6 @@ document.addEventListener(
                 downloadBothZip.disabled =
                     true;
 
-
-                // ------------------------------------------------
-                // Generate every record
-                // ------------------------------------------------
 
                 for (
                     let i = 0;
@@ -1880,67 +2071,47 @@ document.addEventListener(
                         `${i + 1}/${parsedRecords.length}...`;
 
 
-                    // --------------------------------------------
-                    // Render original document
-                    // --------------------------------------------
-
-                    await drawSyntheticDocument(
-                        tempCanvas,
-                        record,
-                        type,
-                        record.photoDataUrl
-                    );
-
-
-                    // --------------------------------------------
-                    // Compress to < 80 KB
-                    // --------------------------------------------
+                    // ------------------------------------------------
+                    // Document
+                    // ------------------------------------------------
 
                     const result =
-                        await getCompressedImageBlob(
-                            tempCanvas
+                        await addDocumentToZip(
+                            cardFolder,
+                            tempCanvas,
+                            record,
+                            i,
+                            type
                         );
 
 
-                    // --------------------------------------------
-                    // Create safe file name
-                    // --------------------------------------------
+                    // ------------------------------------------------
+                    // Photo
+                    // ------------------------------------------------
 
-                    const safe =
-                        record.name
-                            .replace(
-                                /\s+/g,
-                                "_"
-                            )
-                            .replace(
-                                /[^a-zA-Z0-9_-]/g,
-                                ""
-                            ) ||
-                        `record_${i + 1}`;
-
-
-                    // --------------------------------------------
-                    // Put actual JPEG Blob into ZIP
-                    //
-                    // No Base64 conversion required.
-                    // --------------------------------------------
-
-                    folder.file(
-                        `${i + 1}_${safe}_${type}.jpg`,
-                        result.blob
+                    await addPhotoToZip(
+                        photoFolder,
+                        record,
+                        i
                     );
+
+
+                    batchStatus.textContent =
+                        `${type} ${i + 1}/${parsedRecords.length} ` +
+                        `ready ` +
+                        `(${result.sizeKB.toFixed(1)} KB)`;
                 }
 
 
                 // ------------------------------------------------
-                // Generate ZIP
+                // Create ZIP
                 // ------------------------------------------------
 
                 batchStatus.textContent =
                     `Preparing ${type} ZIP...`;
 
 
-                const blob =
+                const zipBlob =
                     await zip.generateAsync(
                         {
                             type:
@@ -1950,14 +2121,15 @@ document.addEventListener(
 
 
                 downloadBlob(
-                    blob,
+                    zipBlob,
                     `${type}_Test_Cards.zip`
                 );
 
 
                 batchStatus.textContent =
                     `${type} ZIP ready. ` +
-                    `All images are below 80 KB.`;
+                    `Cards < 80 KB, photos 900x1200.`;
+
 
             } catch (error) {
 
@@ -1973,17 +2145,41 @@ document.addEventListener(
 
             } finally {
 
-                // ------------------------------------------------
-                // Restore buttons
-                // ------------------------------------------------
-
                 setBatchButtons();
             }
         }
 
 
         // ====================================================
-        // GENERATE COMBINED PAN + AADHAAR ZIP
+        // PAN ZIP BUTTON
+        // ====================================================
+
+        downloadAllPan.onclick =
+            () =>
+                generateZipArchive(
+                    "PAN"
+                );
+
+
+        // ====================================================
+        // AADHAAR ZIP BUTTON
+        // ====================================================
+
+        downloadAllAadhaar.onclick =
+            () =>
+                generateZipArchive(
+                    "Aadhaar"
+                );
+
+
+        // ====================================================
+        // COMBINED ZIP
+        //
+        // STRUCTURE:
+        //
+        //     PAN_Cards/
+        //     Aadhaar_Cards/
+        //     Photos/
         // ====================================================
 
         downloadBothZip.onclick =
@@ -2013,6 +2209,12 @@ document.addEventListener(
                     );
 
 
+                const photoFolder =
+                    zip.folder(
+                        "Photos"
+                    );
+
+
                 const tempCanvas =
                     document.createElement(
                         "canvas"
@@ -2031,10 +2233,6 @@ document.addEventListener(
                         true;
 
 
-                    // ------------------------------------------------
-                    // Process each record
-                    // ------------------------------------------------
-
                     for (
                         let i = 0;
                         i < parsedRecords.length;
@@ -2045,87 +2243,77 @@ document.addEventListener(
                             parsedRecords[i];
 
 
-                        const safe =
-                            record.name
-                                .replace(
-                                    /\s+/g,
-                                    "_"
-                                )
-                                .replace(
-                                    /[^a-zA-Z0-9_-]/g,
-                                    ""
-                                ) ||
-                            `record_${i + 1}`;
-
-
-                        // ============================================
+                        // =========================================
                         // PAN
-                        // ============================================
+                        // =========================================
 
                         batchStatus.textContent =
                             `Generating PAN: ` +
                             `${i + 1}/${parsedRecords.length}...`;
 
 
-                        await drawSyntheticDocument(
-                            tempCanvas,
-                            record,
-                            "PAN",
-                            record.photoDataUrl
-                        );
-
-
                         const panResult =
-                            await getCompressedImageBlob(
-                                tempCanvas
+                            await addDocumentToZip(
+                                panFolder,
+                                tempCanvas,
+                                record,
+                                i,
+                                "PAN"
                             );
 
 
-                        panFolder.file(
-                            `${i + 1}_${safe}_PAN.jpg`,
-                            panResult.blob
-                        );
-
-
-                        // ============================================
+                        // =========================================
                         // AADHAAR
-                        // ============================================
+                        // =========================================
 
                         batchStatus.textContent =
                             `Generating Aadhaar: ` +
                             `${i + 1}/${parsedRecords.length}...`;
 
 
-                        await drawSyntheticDocument(
-                            tempCanvas,
-                            record,
-                            "Aadhaar",
-                            record.photoDataUrl
-                        );
-
-
                         const aadhaarResult =
-                            await getCompressedImageBlob(
-                                tempCanvas
+                            await addDocumentToZip(
+                                aadhaarFolder,
+                                tempCanvas,
+                                record,
+                                i,
+                                "Aadhaar"
                             );
 
 
-                        aadhaarFolder.file(
-                            `${i + 1}_${safe}_Aadhaar.jpg`,
-                            aadhaarResult.blob
+                        // =========================================
+                        // PHOTO
+                        // =========================================
+
+                        batchStatus.textContent =
+                            `Preparing photo: ` +
+                            `${i + 1}/${parsedRecords.length}...`;
+
+
+                        await addPhotoToZip(
+                            photoFolder,
+                            record,
+                            i
                         );
+
+
+                        batchStatus.textContent =
+                            `Record ${i + 1}/` +
+                            `${parsedRecords.length} ready ` +
+                            `(PAN ${panResult.sizeKB.toFixed(1)} KB, ` +
+                            `Aadhaar ${aadhaarResult.sizeKB.toFixed(1)} KB)`;
                     }
 
 
-                    // ------------------------------------------------
-                    // Create combined ZIP
-                    // ------------------------------------------------
+                    // =================================================
+                    // CREATE ZIP
+                    // =================================================
 
                     batchStatus.textContent =
                         "Preparing combined ZIP...";
 
 
-                    const blob =
+                    const zipBlob =
                         await zip.generateAsync(
                             {
                                 type:
@@ -2135,14 +2323,15 @@ document.addEventListener(
 
 
                     downloadBlob(
-                        blob,
+                        zipBlob,
                         "All_Synthetic_Test_Cards.zip"
                     );
 
 
                     batchStatus.textContent =
                         "Combined ZIP ready. " +
-                        "All images are below 80 KB.";
+                        "Cards < 80 KB, photos 900x1200.";
+
 
                 } catch (error) {
 
@@ -2169,7 +2358,7 @@ document.addEventListener(
 
         function downloadBlob(
             blob,
-            name
+            filename
         ) {
 
             const url =
@@ -2178,29 +2367,29 @@ document.addEventListener(
                 );
 
 
-            const link =
+            const anchor =
                 document.createElement(
                     "a"
                 );
 
 
-            link.href =
+            anchor.href =
                 url;
 
 
-            link.download =
-                name;
+            anchor.download =
+                filename;
 
 
             document.body.appendChild(
-                link
+                anchor
             );
 
 
-            link.click();
+            anchor.click();
 
 
-            link.remove();
+            anchor.remove();
 
 
             setTimeout(
