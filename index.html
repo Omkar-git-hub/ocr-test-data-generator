@@ -1,431 +1,1044 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Test Data Generator</title>
-<link rel="stylesheet" href="css/style.css">
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+    <!-- ========================================================
+         PAGE META
+         ======================================================== -->
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Test Data Generator</title>
+
+
+    <!-- ========================================================
+         APPLICATION CSS
+         ======================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+
+    <!-- ========================================================
+         EXTERNAL LIBRARIES
+         ======================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
 </head>
+
 
 <body>
 
 <div class="container">
 
-  <header class="app-header">
-    <div>
-      <h1>Test Data Generator</h1>
-      <p class="hint">
-        Synthetic PAN &amp; Aadhaar-style test documents for OCR and automation testing.
-      </p>
+
+    <!-- ========================================================
+         APPLICATION HEADER
+         ======================================================== -->
+
+    <header class="app-header">
+
+        <div>
+
+            <h1>
+                Test Data Generator
+            </h1>
+
+            <p class="hint">
+                Synthetic PAN &amp; Aadhaar-style test documents
+                for OCR and automation testing.
+            </p>
+
+        </div>
+
+
+        <span class="test-badge">
+            TEST DATA ONLY
+        </span>
+
+    </header>
+
+
+
+    <!-- ========================================================
+         DOCUMENT CATEGORY
+         Individual / Entity
+         ======================================================== -->
+
+    <div class="category-tabs">
+
+        <button
+            id="categoryIndividualBtn"
+            class="category-btn active"
+            type="button"
+        >
+            Individual
+        </button>
+
+
+        <button
+            id="categoryEntityBtn"
+            class="category-btn"
+            type="button"
+        >
+            Entity
+        </button>
+
     </div>
 
-    <span class="test-badge">TEST DATA ONLY</span>
-  </header>
 
 
-  <div class="mode-tabs">
-    <button id="modeManualBtn">Manual Input</button>
-    <button id="modeBatchBtn" class="secondary">Batch Excel</button>
-  </div>
+    <!-- ========================================================
+         GENERATION MODE
+         Manual / Bulk
+         ======================================================== -->
+
+    <div class="mode-tabs">
+
+        <button
+            id="modeManualBtn"
+            class="mode-btn active"
+            type="button"
+        >
+            Manual Input
+        </button>
 
 
-  <section id="manualSection" class="card">
+        <button
+            id="modeBatchBtn"
+            class="mode-btn"
+            type="button"
+        >
+            Bulk Excel
+        </button>
 
-    <div class="section-head">
-      <div>
-        <h2>Manual Generator</h2>
-        <p class="hint">
-          Enter data and generate a synthetic OCR test document.
-        </p>
-      </div>
     </div>
 
 
-    <div class="grid">
 
-      <div class="form-panel">
+    <!-- ========================================================
+         INDIVIDUAL MODULE
+         ======================================================== -->
 
-        <div class="two-col">
-
-          <div>
-            <label for="docType">Document Type</label>
-
-            <select id="docType">
-              <option value="PAN">PAN Test Card</option>
-              <option value="Aadhaar">Aadhaar Test Card</option>
-            </select>
-          </div>
+    <div id="individualModule">
 
 
-          <div>
-            <label for="inputGender">Gender</label>
+        <!-- ====================================================
+             INDIVIDUAL MANUAL GENERATOR
+             ==================================================== -->
 
-            <select id="inputGender">
-              <option value="">Select</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-        </div>
-
-
-        <div class="two-col">
-
-          <div>
-            <label for="inputName">Full Name</label>
-            <input
-              id="inputName"
-              type="text"
-              placeholder="Enter full name"
-            >
-          </div>
-
-
-          <div>
-            <label for="inputFather">Father / Parent Name</label>
-            <input
-              id="inputFather"
-              type="text"
-              placeholder="Enter parent name"
-            >
-          </div>
-
-        </div>
-
-
-        <div class="two-col">
-
-          <div>
-            <label for="inputDob">Date of Birth</label>
-            <input
-              id="inputDob"
-              type="text"
-              placeholder="DD/MM/YYYY"
-            >
-          </div>
-
-
-          <div>
-            <label for="inputNumber">ID Number</label>
-            <input
-              id="inputNumber"
-              type="text"
-              placeholder="Leave blank to generate"
-            >
-          </div>
-
-        </div>
-
-
-        <label for="inputAddress">Address</label>
-
-        <textarea
-          id="inputAddress"
-          placeholder="Enter address"
-        ></textarea>
-
-
-        <label for="photoInput">Photo (Optional)</label>
-
-        <input
-          type="file"
-          id="photoInput"
-          accept="image/*"
+        <section
+            id="manualSection"
+            class="card"
         >
 
+            <div class="section-head">
 
-        <div class="actions">
+                <div>
 
-          <button id="generateBtn">
-            Generate Preview
-          </button>
+                    <h2>
+                        Manual Generator
+                    </h2>
 
-          <button id="randomizeBtn" class="secondary">
-            Randomize Data
-          </button>
+                    <p class="hint">
+                        Enter data and generate a synthetic
+                        OCR test document.
+                    </p>
 
-          <button id="clearBtn" class="ghost">
-            Clear
-          </button>
+                </div>
 
-        </div>
-
-
-        <div id="manualStatus" class="status"></div>
-
-      </div>
+            </div>
 
 
-      <div class="preview-panel">
-
-        <div class="canvas-wrap">
-
-          <canvas id="cardCanvas"></canvas>
-
-          <div
-            id="emptyPreview"
-            class="empty-preview"
-          >
-            No preview generated
-          </div>
-
-        </div>
+            <div class="grid">
 
 
-        <div class="actions">
+                <!-- ============================================
+                     INDIVIDUAL FORM
+                     ============================================ -->
 
-          <button
-            id="downloadCardBtn"
-            disabled
-          >
-            Download JPEG
-          </button>
+                <div class="form-panel">
 
-        </div>
 
-      </div>
+                    <!-- ========================================
+                         DOCUMENT TYPE / GENDER
+                         ======================================== -->
+
+                    <div class="two-col">
+
+                        <div>
+
+                            <label for="docType">
+                                Document Type
+                            </label>
+
+                            <select id="docType">
+
+                                <option value="PAN">
+                                    PAN Test Card
+                                </option>
+
+                                <option value="Aadhaar">
+                                    Aadhaar Test Card
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div>
+
+                            <label for="inputGender">
+                                Gender
+                            </label>
+
+                            <select id="inputGender">
+
+                                <option value="">
+                                    Select
+                                </option>
+
+                                <option value="Male">
+                                    Male
+                                </option>
+
+                                <option value="Female">
+                                    Female
+                                </option>
+
+                                <option value="Other">
+                                    Other
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ========================================
+                         NAME / PARENT NAME
+                         ======================================== -->
+
+                    <div class="two-col">
+
+                        <div>
+
+                            <label for="inputName">
+                                Full Name
+                            </label>
+
+                            <input
+                                id="inputName"
+                                type="text"
+                                placeholder="Enter full name"
+                            >
+
+                        </div>
+
+
+                        <div>
+
+                            <label for="inputFather">
+                                Father / Parent Name
+                            </label>
+
+                            <input
+                                id="inputFather"
+                                type="text"
+                                placeholder="Enter parent name"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ========================================
+                         DOB / ID
+                         ======================================== -->
+
+                    <div class="two-col">
+
+                        <div>
+
+                            <label for="inputDob">
+                                Date of Birth
+                            </label>
+
+                            <input
+                                id="inputDob"
+                                type="text"
+                                placeholder="DD/MM/YYYY"
+                            >
+
+                        </div>
+
+
+                        <div>
+
+                            <label for="inputNumber">
+                                ID Number
+                            </label>
+
+                            <input
+                                id="inputNumber"
+                                type="text"
+                                placeholder="Leave blank to generate"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ========================================
+                         ADDRESS
+                         ======================================== -->
+
+                    <label for="inputAddress">
+                        Address
+                    </label>
+
+                    <textarea
+                        id="inputAddress"
+                        placeholder="Enter address"
+                    ></textarea>
+
+
+                    <!-- ========================================
+                         PHOTO
+                         ======================================== -->
+
+                    <label for="photoInput">
+                        Photo (Optional)
+                    </label>
+
+                    <input
+                        type="file"
+                        id="photoInput"
+                        accept="image/*"
+                    >
+
+
+                    <!-- ========================================
+                         INDIVIDUAL ACTIONS
+                         ======================================== -->
+
+                    <div class="actions">
+
+                        <button
+                            id="generateBtn"
+                            type="button"
+                        >
+                            Generate Preview
+                        </button>
+
+
+                        <button
+                            id="randomizeBtn"
+                            class="secondary"
+                            type="button"
+                        >
+                            Randomize Data
+                        </button>
+
+
+                        <button
+                            id="clearBtn"
+                            class="ghost"
+                            type="button"
+                        >
+                            Clear
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="manualStatus"
+                        class="status"
+                    ></div>
+
+                </div>
+
+
+
+                <!-- ============================================
+                     INDIVIDUAL PREVIEW
+                     ============================================ -->
+
+                <div class="preview-panel">
+
+                    <div class="canvas-wrap">
+
+                        <canvas
+                            id="cardCanvas"
+                        ></canvas>
+
+
+                        <div
+                            id="emptyPreview"
+                            class="empty-preview"
+                        >
+                            No preview generated
+                        </div>
+
+                    </div>
+
+
+                    <div class="actions">
+
+                        <button
+                            id="downloadCardBtn"
+                            disabled
+                            type="button"
+                        >
+                            Download JPEG
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ====================================================
+             INDIVIDUAL BULK EXCEL
+             ==================================================== -->
+
+        <section
+            id="batchSection"
+            class="card"
+            style="display:none"
+        >
+
+            <div class="section-head">
+
+                <div>
+
+                    <h2>
+                        Batch Excel Processor
+                    </h2>
+
+                    <p class="hint">
+                        Upload Excel and matching photos.
+                        Photo values should be filenames,
+                        not local PC paths.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================
+                 UPLOAD AREA
+                 ================================================ -->
+
+            <div class="upload-grid">
+
+
+                <!-- ============================================
+                     EXCEL UPLOAD
+                     ============================================ -->
+
+                <div class="upload-box">
+
+                    <strong>
+                        1. Excel
+                    </strong>
+
+                    <span class="hint">
+                        Required columns:
+                        Name, DOB, Gender, Address,
+                        ParentName, Photo.
+                        PAN and Aadhaar are optional.
+                    </span>
+
+
+                    <div class="actions">
+
+                        <a
+                            href="#"
+                            id="downloadTemplateBtn"
+                            class="file-btn secondary"
+                        >
+                            Download Sample Template
+                        </a>
+
+
+                        <input
+                            type="file"
+                            id="excelUpload"
+                            accept=".xlsx,.xls"
+                            hidden
+                        >
+
+
+                        <button
+                            id="uploadExcelTrigger"
+                            class="secondary"
+                            type="button"
+                        >
+                            Choose Excel
+                        </button>
+
+                    </div>
+
+
+                    <span
+                        id="excelFileName"
+                        class="status"
+                    ></span>
+
+                </div>
+
+
+
+                <!-- ============================================
+                     PHOTO UPLOAD
+                     ============================================ -->
+
+                <div class="upload-box">
+
+                    <strong>
+                        2. Photos
+                    </strong>
+
+                    <span class="hint">
+                        Upload multiple images or one ZIP.
+                        Filenames must match the Photo column.
+                    </span>
+
+
+                    <div class="actions">
+
+                        <input
+                            type="file"
+                            id="bulkPhotoUpload"
+                            accept="image/*"
+                            multiple
+                        >
+
+
+                        <input
+                            type="file"
+                            id="bulkZipUpload"
+                            accept=".zip"
+                        >
+
+
+                        <button
+                            id="clearPhotosBtn"
+                            class="ghost"
+                            type="button"
+                        >
+                            Clear Photos
+                        </button>
+
+                    </div>
+
+
+                    <span
+                        id="photoUploadStatus"
+                        class="status"
+                    ></span>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ================================================
+                 BATCH SUMMARY
+                 ================================================ -->
+
+            <div
+                class="batch-summary"
+                id="batchSummary"
+            >
+
+                <span>
+                    Records
+                    <b id="recordCount">0</b>
+                </span>
+
+
+                <span>
+                    Photos matched
+                    <b id="matchedCount">0</b>
+                </span>
+
+
+                <span>
+                    Missing photos
+                    <b id="missingCount">0</b>
+                </span>
+
+            </div>
+
+
+            <div
+                id="batchStatus"
+                class="status"
+            ></div>
+
+
+
+            <!-- ================================================
+                 BATCH ACTIONS
+                 ================================================ -->
+
+            <div class="row-between batch-actions">
+
+                <h3>
+                    Parsed Records
+                </h3>
+
+
+                <div class="actions">
+
+                    <button
+                        id="downloadAllPan"
+                        disabled
+                        type="button"
+                    >
+                        Download PAN ZIP
+                    </button>
+
+
+                    <button
+                        id="downloadAllAadhaar"
+                        disabled
+                        type="button"
+                    >
+                        Download Aadhaar ZIP
+                    </button>
+
+
+                    <button
+                        id="downloadBothZip"
+                        disabled
+                        type="button"
+                    >
+                        Download Combined ZIP
+                    </button>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ================================================
+                 BATCH TABLE
+                 ================================================ -->
+
+            <div class="table-wrap">
+
+                <table id="batchTable">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                #
+                            </th>
+
+                            <th class="batch-photo-cell">
+                                Photo
+                            </th>
+
+                            <th>
+                                Name
+                            </th>
+
+                            <th>
+                                DOB
+                            </th>
+
+                            <th>
+                                Gender
+                            </th>
+
+                            <th>
+                                PAN
+                            </th>
+
+                            <th>
+                                Aadhaar
+                            </th>
+
+                            <th>
+                                Address
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="batchTableBody">
+
+                        <tr>
+
+                            <td
+                                colspan="8"
+                                class="empty-cell"
+                            >
+                                No Excel file uploaded yet.
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
 
     </div>
 
-  </section>
 
 
-  <section
-    id="batchSection"
-    class="card"
-    style="display:none"
-  >
-
-    <div class="section-head">
-
-      <div>
-
-        <h2>Batch Excel Processor</h2>
-
-        <p class="hint">
-          Upload Excel and matching photos.
-          Photo values should be filenames, not local PC paths.
-        </p>
-
-      </div>
-
-    </div>
-
-
-    <div class="upload-grid">
-
-      <div class="upload-box">
-
-        <strong>1. Excel</strong>
-
-        <span class="hint">
-          Required columns:
-          Name, DOB, Gender, Address, ParentName, Photo.
-          PAN and Aadhaar are optional.
-        </span>
-
-
-        <div class="actions">
-
-          <a
-            href="#"
-            id="downloadTemplateBtn"
-            class="file-btn secondary"
-          >
-            Download Sample Template
-          </a>
-
-
-          <input
-            type="file"
-            id="excelUpload"
-            accept=".xlsx,.xls"
-            hidden
-          >
-
-
-          <button
-            id="uploadExcelTrigger"
-            class="secondary"
-          >
-            Choose Excel
-          </button>
-
-        </div>
-
-
-        <span
-          id="excelFileName"
-          class="status"
-        ></span>
-
-      </div>
-
-
-      <div class="upload-box">
-
-        <strong>2. Photos</strong>
-
-        <span class="hint">
-          Upload multiple images or one ZIP.
-          Filenames must match the Photo column.
-        </span>
-
-
-        <div class="actions">
-
-          <input
-            type="file"
-            id="bulkPhotoUpload"
-            accept="image/*"
-            multiple
-          >
-
-
-          <input
-            type="file"
-            id="bulkZipUpload"
-            accept=".zip"
-          >
-
-
-          <button
-            id="clearPhotosBtn"
-            class="ghost"
-          >
-            Clear Photos
-          </button>
-
-        </div>
-
-
-        <span
-          id="photoUploadStatus"
-          class="status"
-        ></span>
-
-      </div>
-
-    </div>
-
+    <!-- ========================================================
+         ENTITY MODULE
+         ======================================================== -->
 
     <div
-      class="batch-summary"
-      id="batchSummary"
+        id="entityModule"
+        style="display:none"
     >
 
-      <span>
-        Records
-        <b id="recordCount">0</b>
-      </span>
 
-      <span>
-        Photos matched
-        <b id="matchedCount">0</b>
-      </span>
+        <!-- ====================================================
+             ENTITY MANUAL GENERATOR
+             ==================================================== -->
 
-      <span>
-        Missing photos
-        <b id="missingCount">0</b>
-      </span>
+        <section
+            id="entityManualSection"
+            class="card"
+        >
+
+            <div class="section-head">
+
+                <div>
+
+                    <h2>
+                        Entity PAN Generator
+                    </h2>
+
+                    <p class="hint">
+                        Enter entity information and generate
+                        a synthetic PAN test document.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="grid">
+
+
+                <!-- ============================================
+                     ENTITY FORM
+                     ============================================ -->
+
+                <div class="form-panel">
+
+
+                    <!-- ========================================
+                         ENTITY NAME / TYPE
+                         ======================================== -->
+
+                    <div class="two-col">
+
+                        <div>
+
+                            <label for="entityName">
+                                Entity Name
+                            </label>
+
+                            <input
+                                id="entityName"
+                                type="text"
+                                placeholder="Enter entity name"
+                            >
+
+                        </div>
+
+
+                        <div>
+
+                            <label for="entityType">
+                                Entity Type
+                            </label>
+
+                            <select id="entityType">
+
+                                <option value="">
+                                    Select entity type
+                                </option>
+
+                                <option value="PRIVATE LIMITED">
+                                    Private Limited
+                                </option>
+
+                                <option value="LIMITED">
+                                    Limited
+                                </option>
+
+                                <option value="LLP">
+                                    LLP
+                                </option>
+
+                                <option value="PARTNERSHIP">
+                                    Partnership
+                                </option>
+
+                                <option value="PROPRIETORSHIP">
+                                    Proprietorship
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ========================================
+                         REGISTRATION / INCORPORATION
+                         ======================================== -->
+
+                    <div class="two-col">
+
+                        <div>
+
+                            <label for="entityRegistrationNumber">
+                                Registration Number
+                            </label>
+
+                            <input
+                                id="entityRegistrationNumber"
+                                type="text"
+                                placeholder="Leave blank to generate"
+                            >
+
+                        </div>
+
+
+                        <div>
+
+                            <label for="entityIncorporationDate">
+                                Date of Incorporation
+                            </label>
+
+                            <input
+                                id="entityIncorporationDate"
+                                type="text"
+                                placeholder="DD/MM/YYYY"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ========================================
+                         ENTITY PAN
+                         ======================================== -->
+
+                    <div class="two-col">
+
+                        <div>
+
+                            <label for="entityPan">
+                                PAN
+                            </label>
+
+                            <input
+                                id="entityPan"
+                                type="text"
+                                placeholder="Leave blank to generate"
+                            >
+
+                        </div>
+
+
+                        <div>
+
+                            <label for="entityPhoto">
+                                Logo / Image (Optional)
+                            </label>
+
+                            <input
+                                type="file"
+                                id="entityPhoto"
+                                accept="image/*"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ========================================
+                         ENTITY ADDRESS
+                         ======================================== -->
+
+                    <label for="entityAddress">
+                        Registered Address
+                    </label>
+
+                    <textarea
+                        id="entityAddress"
+                        placeholder="Enter registered address"
+                    ></textarea>
+
+
+                    <!-- ========================================
+                         ENTITY ACTIONS
+                         ======================================== -->
+
+                    <div class="actions">
+
+                        <button
+                            id="entityGenerateBtn"
+                            type="button"
+                        >
+                            Generate Preview
+                        </button>
+
+
+                        <button
+                            id="entityRandomizeBtn"
+                            class="secondary"
+                            type="button"
+                        >
+                            Randomize Data
+                        </button>
+
+
+                        <button
+                            id="entityClearBtn"
+                            class="ghost"
+                            type="button"
+                        >
+                            Clear
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="entityStatus"
+                        class="status"
+                    ></div>
+
+                </div>
+
+
+
+                <!-- ============================================
+                     ENTITY PREVIEW
+                     ============================================ -->
+
+                <div class="preview-panel">
+
+                    <div class="canvas-wrap">
+
+                        <canvas
+                            id="entityCardCanvas"
+                        ></canvas>
+
+
+                        <div
+                            id="entityEmptyPreview"
+                            class="empty-preview"
+                        >
+                            No preview generated
+                        </div>
+
+                    </div>
+
+
+                    <div class="actions">
+
+                        <button
+                            id="entityDownloadBtn"
+                            disabled
+                            type="button"
+                        >
+                            Download JPEG
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ====================================================
+             ENTITY BULK
+             ==================================================== -->
+
+        <section
+            id="entityBatchSection"
+            class="card"
+            style="display:none"
+        >
+
+            <div class="section-head">
+
+                <div>
+
+                    <h2>
+                        Entity Bulk Excel
+                    </h2>
+
+                    <p class="hint">
+                        Entity bulk processing will be added
+                        in the next phase.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
 
     </div>
-
-
-    <div
-      id="batchStatus"
-      class="status"
-    ></div>
-
-
-    <div class="row-between batch-actions">
-
-      <h3>Parsed Records</h3>
-
-      <div class="actions">
-
-        <button
-          id="downloadAllPan"
-          disabled
-        >
-          Download PAN ZIP
-        </button>
-
-
-        <button
-          id="downloadAllAadhaar"
-          disabled
-        >
-          Download Aadhaar ZIP
-        </button>
-
-
-        <button
-          id="downloadBothZip"
-          disabled
-        >
-          Download Combined ZIP
-        </button>
-
-      </div>
-
-    </div>
-
-
-    <div class="table-wrap">
-
-      <table id="batchTable">
-
-        <thead>
-
-          <tr>
-            <th>#</th>
-            <th>Photo</th>
-            <th>Name</th>
-            <th>DOB</th>
-            <th>Gender</th>
-            <th>PAN</th>
-            <th>Aadhaar</th>
-            <th>Address</th>
-          </tr>
-
-        </thead>
-
-
-        <tbody id="batchTableBody">
-
-          <tr>
-
-            <td
-              colspan="8"
-              class="empty-cell"
-            >
-              No Excel file uploaded yet.
-            </td>
-
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-  </section>
 
 </div>
 
-
-<!-- ========================================================
-     EXTERNAL LIBRARIES
-     ======================================================== -->
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 
 <!-- ========================================================
@@ -433,6 +1046,7 @@
      ======================================================== -->
 
 <script src="js/image-export.js"></script>
+
 
 
 <!-- ========================================================
@@ -446,5 +1060,493 @@
 <script src="js/individual/app.js"></script>
 
 
+
+<!-- ========================================================
+     ENTITY MODULE
+     ======================================================== -->
+
+<script src="js/entity/data-generator.js"></script>
+
+<script src="js/entity/document-renderer.js"></script>
+
+<script src="js/entity/app.js"></script>
+
+
+
+<!-- ========================================================
+     CATEGORY / MODE CONTROLLER
+     ======================================================== -->
+
+<script>
+
+    /* ========================================================
+       CATEGORY ELEMENTS
+       ======================================================== */
+
+    const categoryIndividualBtn =
+        document.getElementById(
+            "categoryIndividualBtn"
+        );
+
+
+    const categoryEntityBtn =
+        document.getElementById(
+            "categoryEntityBtn"
+        );
+
+
+    const individualModule =
+        document.getElementById(
+            "individualModule"
+        );
+
+
+    const entityModule =
+        document.getElementById(
+            "entityModule"
+        );
+
+
+    /* ========================================================
+       MODE ELEMENTS
+       ======================================================== */
+
+    const modeManualBtn =
+        document.getElementById(
+            "modeManualBtn"
+        );
+
+
+    const modeBatchBtn =
+        document.getElementById(
+            "modeBatchBtn"
+        );
+
+
+    /* ========================================================
+       INDIVIDUAL SECTIONS
+       ======================================================== */
+
+    const manualSection =
+        document.getElementById(
+            "manualSection"
+        );
+
+
+    const batchSection =
+        document.getElementById(
+            "batchSection"
+        );
+
+
+    /* ========================================================
+       ENTITY SECTIONS
+       ======================================================== */
+
+    const entityManualSection =
+        document.getElementById(
+            "entityManualSection"
+        );
+
+
+    const entityBatchSection =
+        document.getElementById(
+            "entityBatchSection"
+        );
+
+
+    /* ========================================================
+       CURRENT CATEGORY
+       ======================================================== */
+
+    let currentCategory =
+        "individual";
+
+
+    /* ========================================================
+       CURRENT MODE
+       ======================================================== */
+
+    let currentMode =
+        "manual";
+
+
+    /* ========================================================
+       UPDATE CATEGORY BUTTON STATE
+       ======================================================== */
+
+    function updateCategoryButtons() {
+
+        categoryIndividualBtn.classList.toggle(
+            "active",
+            currentCategory === "individual"
+        );
+
+
+        categoryEntityBtn.classList.toggle(
+            "active",
+            currentCategory === "entity"
+        );
+
+    }
+
+
+    /* ========================================================
+       UPDATE MODE BUTTON STATE
+       ======================================================== */
+
+    function updateModeButtons() {
+
+        modeManualBtn.classList.toggle(
+            "active",
+            currentMode === "manual"
+        );
+
+
+        modeBatchBtn.classList.toggle(
+            "active",
+            currentMode === "batch"
+        );
+
+    }
+
+
+    /* ========================================================
+       UPDATE VISIBLE MODULE
+       ======================================================== */
+
+    function updateVisibleContent() {
+
+        /* ====================================================
+           INDIVIDUAL
+           ==================================================== */
+
+        if (
+            currentCategory ===
+            "individual"
+        ) {
+
+            individualModule.style.display =
+                "block";
+
+
+            entityModule.style.display =
+                "none";
+
+
+            if (
+                currentMode ===
+                "manual"
+            ) {
+
+                manualSection.style.display =
+                    "block";
+
+
+                batchSection.style.display =
+                    "none";
+
+            }
+            else {
+
+                manualSection.style.display =
+                    "none";
+
+
+                batchSection.style.display =
+                    "block";
+
+            }
+
+        }
+
+
+        /* ====================================================
+           ENTITY
+           ==================================================== */
+
+        else {
+
+            individualModule.style.display =
+                "none";
+
+
+            entityModule.style.display =
+                "block";
+
+
+            if (
+                currentMode ===
+                "manual"
+            ) {
+
+                entityManualSection.style.display =
+                    "block";
+
+
+                entityBatchSection.style.display =
+                    "none";
+
+            }
+            else {
+
+                entityManualSection.style.display =
+                    "none";
+
+
+                entityBatchSection.style.display =
+                    "block";
+
+            }
+
+        }
+
+    }
+
+
+    /* ========================================================
+       SELECT INDIVIDUAL
+       ======================================================== */
+
+    categoryIndividualBtn.addEventListener(
+        "click",
+        function () {
+
+            currentCategory =
+                "individual";
+
+
+            updateCategoryButtons();
+
+
+            updateModeButtons();
+
+
+            updateVisibleContent();
+
+        }
+    );
+
+
+    /* ========================================================
+       SELECT ENTITY
+       ======================================================== */
+
+    categoryEntityBtn.addEventListener(
+        "click",
+        function () {
+
+            currentCategory =
+                "entity";
+
+
+            /*
+             * Entity starts in Manual mode.
+             */
+
+            currentMode =
+                "manual";
+
+
+            updateCategoryButtons();
+
+
+            updateModeButtons();
+
+
+            updateVisibleContent();
+
+        }
+    );
+
+
+    /* ========================================================
+       SELECT MANUAL
+       ======================================================== */
+
+    modeManualBtn.addEventListener(
+        "click",
+        function () {
+
+            currentMode =
+                "manual";
+
+
+            updateModeButtons();
+
+
+            updateVisibleContent();
+
+        }
+    );
+
+
+    /* ========================================================
+       SELECT BULK
+       ======================================================== */
+
+    modeBatchBtn.addEventListener(
+        "click",
+        function () {
+
+            currentMode =
+                "batch";
+
+
+            updateModeButtons();
+
+
+            updateVisibleContent();
+
+        }
+    );
+
+
+    /* ========================================================
+       INITIAL APPLICATION STATE
+       ======================================================== */
+
+    updateCategoryButtons();
+
+    updateModeButtons();
+
+    updateVisibleContent();
+
+
+    /* ========================================================
+       BATCH PHOTO STATUS HELPER
+       ========================================================
+
+       This does NOT change the existing batch logic.
+
+       It only detects "missing" text inserted by the
+       existing batch renderer and gives it a CSS class.
+
+       This allows CSS to show Missing in RED.
+       ======================================================== */
+
+    function updateMissingPhotoStyles() {
+
+        const tbody =
+            document.getElementById(
+                "batchTableBody"
+            );
+
+        if (!tbody) {
+            return;
+        }
+
+
+        const rows =
+            tbody.querySelectorAll("tr");
+
+
+        rows.forEach(function (row) {
+
+            const cells =
+                row.querySelectorAll("td");
+
+
+            if (cells.length < 2) {
+                return;
+            }
+
+
+            const photoCell =
+                cells[1];
+
+
+            const text =
+                photoCell.textContent
+                    .trim()
+                    .toLowerCase();
+
+
+            if (
+                text.includes("missing")
+            ) {
+
+                photoCell.classList.add(
+                    "photo-missing"
+                );
+
+
+                const elements =
+                    photoCell.querySelectorAll(
+                        "*"
+                    );
+
+
+                elements.forEach(
+                    function (element) {
+
+                        if (
+                            element.textContent
+                                .trim()
+                                .toLowerCase()
+                                .includes("missing")
+                        ) {
+
+                            element.classList.add(
+                                "photo-missing"
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+
+        });
+
+    }
+
+
+    /* ========================================================
+       WATCH BATCH TABLE
+       ========================================================
+
+       Existing app.js dynamically inserts rows.
+
+       MutationObserver lets the styling helper run whenever
+       a new batch record is rendered.
+       ======================================================== */
+
+    const batchTableBody =
+        document.getElementById(
+            "batchTableBody"
+        );
+
+
+    if (batchTableBody) {
+
+        const batchObserver =
+            new MutationObserver(
+                function () {
+
+                    updateMissingPhotoStyles();
+
+                }
+            );
+
+
+        batchObserver.observe(
+            batchTableBody,
+            {
+                childList: true,
+                subtree: true
+            }
+        );
+
+    }
+
+
+    updateMissingPhotoStyles();
+
+</script>
+
+
 </body>
+
 </html>

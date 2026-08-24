@@ -1,1 +1,1311 @@
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f4f6f8;color:#17202a;line-height:1.4}.container{max-width:1280px;margin:auto;padding:18px 22px}.app-header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:14px}.app-header h1{margin:0 0 3px;font-size:23px}.hint{font-size:12px;color:#66717d;margin:0}.test-badge{font-size:11px;font-weight:700;border:1px solid #cbd5e1;border-radius:999px;padding:5px 9px;background:#fff}.mode-tabs{display:flex;gap:8px;margin-bottom:12px}.mode-tabs button{min-width:130px}.card{background:#fff;border:1px solid #e1e5e8;border-radius:10px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.035)}h2{margin:0;font-size:17px}h3{font-size:14px;margin:0}.section-head{margin-bottom:12px}.grid{display:grid;grid-template-columns:440px minmax(0,1fr);gap:18px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:block;font-size:12px;font-weight:650;margin:8px 0 4px;color:#374151}input,select,textarea{display:block;width:100%;padding:8px 10px;border:1px solid #ccd2d8;border-radius:6px;font:inherit;font-size:13px;background:#fff}input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12)}textarea{height:62px;min-height:62px;resize:vertical}.actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:10px}button,.file-btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:6px;padding:8px 12px;background:#17202a;color:#fff;cursor:pointer;font-weight:600;font-size:12px;text-decoration:none}button:hover:not(:disabled),.file-btn:hover{filter:brightness(1.08)}button:disabled{opacity:.45;cursor:not-allowed}.secondary{background:#eef1f4;color:#17202a}.ghost{background:transparent;color:#475569;border:1px solid #d7dde3}.status{font-size:11px;color:#66717d;margin-top:7px}.preview-panel{min-width:0}.canvas-wrap{position:relative;min-height:430px;border:1px solid #e1e5e8;border-radius:8px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:auto;padding:10px}.canvas-wrap canvas{display:block;width:min(100%,856px);height:auto;border-radius:5px}.empty-preview{position:absolute;color:#94a3b8;font-size:12px;pointer-events:none}.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.upload-box{border:1px dashed #cbd5e1;border-radius:8px;padding:12px;background:#fafbfc}.upload-box strong{display:block;font-size:13px;margin-bottom:4px}.batch-summary{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0;padding:9px 11px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:7px;font-size:12px}.batch-actions{margin:12px 0 8px}.table-wrap{overflow:auto;max-height:420px;border:1px solid #e8ebee;border-radius:7px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #e8ebee;white-space:nowrap}th{background:#f8fafc;font-weight:650;position:sticky;top:0;z-index:2}.empty-cell{text-align:center;color:#66717d;padding:22px}.photo-cell{display:flex;flex-direction:column;align-items:center;gap:3px}.batch-photo,.photo-missing{width:42px;height:52px;object-fit:cover;border-radius:4px;border:1px solid #d1d5db}.photo-missing{display:flex;align-items:center;justify-content:center;text-align:center;border-style:dashed;color:#dc2626;background:#fef2f2;font-size:9px}.photo-cell small{font-size:9px;color:#66717d;max-width:90px;overflow:hidden;text-overflow:ellipsis}.table-status-ok{color:#15803d;font-weight:600}.table-status-missing{color:#dc2626;font-weight:600}code{font-family:"Courier New",monospace;font-size:11px}@media(max-width:900px){.grid,.upload-grid{grid-template-columns:1fr}.container{padding:12px}.canvas-wrap{min-height:280px}}@media(max-width:560px){.two-col{grid-template-columns:1fr}.app-header{align-items:flex-start;flex-direction:column}.mode-tabs button{flex:1}.batch-actions{align-items:flex-start;flex-direction:column}}
+/* ============================================================
+   TEST DATA GENERATOR
+   MAIN APPLICATION STYLES
+   ============================================================ */
+
+
+/* ============================================================
+   GLOBAL RESET
+   ============================================================ */
+
+* {
+    box-sizing: border-box;
+}
+
+
+html {
+    margin: 0;
+    padding: 0;
+}
+
+
+body {
+    margin: 0;
+    padding: 0;
+
+    background: #f4f6f8;
+
+    color: #17212b;
+
+    font-family:
+        Inter,
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   MAIN CONTAINER
+   ============================================================ */
+
+.container {
+    width: min(
+        1500px,
+        calc(100% - 40px)
+    );
+
+    margin: 24px auto 40px;
+
+    padding: 34px;
+
+    background: #ffffff;
+
+    border: 1px solid #dfe5ea;
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 8px 30px rgba(
+            23,
+            33,
+            43,
+            0.06
+        );
+}
+
+
+/* ============================================================
+   APPLICATION HEADER
+   ============================================================ */
+
+.app-header {
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 24px;
+
+    margin-bottom: 30px;
+}
+
+
+.app-header h1 {
+    margin: 0 0 8px;
+
+    color: #17212b;
+
+    font-size: 32px;
+
+    font-weight: 750;
+
+    letter-spacing: -0.6px;
+}
+
+
+.app-header .hint {
+    margin: 0;
+
+    color: #687887;
+
+    font-size: 15px;
+}
+
+
+.test-badge {
+    flex-shrink: 0;
+
+    padding: 8px 14px;
+
+    border-radius: 999px;
+
+    background: #edf2f6;
+
+    color: #4f6070;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.3px;
+}
+
+
+/* ============================================================
+   DOCUMENT CATEGORY
+   Individual / Entity
+
+   Primary navigation.
+   Selected category = BLACK.
+   ============================================================ */
+
+.category-tabs {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 4px;
+
+    padding: 4px;
+
+    margin-bottom: 14px;
+
+    background: #eef1f4;
+
+    border: 1px solid #d9dfe5;
+
+    border-radius: 12px;
+}
+
+
+.category-btn {
+    min-width: 135px;
+
+    padding: 11px 26px;
+
+    border: 1px solid transparent;
+
+    border-radius: 8px;
+
+    background: transparent;
+
+    color: #53616f;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    font-weight: 650;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+.category-btn:hover {
+    background: #e2e7eb;
+
+    color: #17212b;
+}
+
+
+.category-btn:active {
+    transform: translateY(1px);
+}
+
+
+/* ============================================================
+   SELECTED CATEGORY
+   ============================================================ */
+
+.category-btn.active {
+    background: #17212b;
+
+    color: #ffffff;
+
+    border-color: #17212b;
+
+    box-shadow:
+        0 3px 8px rgba(
+            20,
+            30,
+            40,
+            0.20
+        );
+}
+
+
+.category-btn.active:hover {
+    background: #17212b;
+
+    color: #ffffff;
+
+    border-color: #17212b;
+}
+
+
+/* ============================================================
+   GENERATION MODE
+   Manual Input / Bulk Excel
+
+   Secondary navigation.
+   ============================================================ */
+
+.mode-tabs {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 28px;
+}
+
+
+.mode-btn {
+    min-width: 125px;
+
+    padding: 10px 20px;
+
+    border: 1px solid #d3dae1;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #53616f;
+
+    cursor: pointer;
+
+    font-size: 13px;
+
+    font-weight: 650;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+.mode-btn:hover {
+    background: #f2f5f7;
+
+    color: #17212b;
+
+    border-color: #c3ccd4;
+}
+
+
+.mode-btn:active {
+    transform: translateY(1px);
+}
+
+
+/* ============================================================
+   SELECTED MODE
+   ============================================================ */
+
+.mode-btn.active {
+    background: #17212b;
+
+    color: #ffffff;
+
+    border-color: #17212b;
+
+    box-shadow:
+        0 3px 8px rgba(
+            20,
+            30,
+            40,
+            0.16
+        );
+}
+
+
+.mode-btn.active:hover {
+    background: #17212b;
+
+    color: #ffffff;
+
+    border-color: #17212b;
+}
+
+
+/* ============================================================
+   GENERAL CARD
+   ============================================================ */
+
+.card {
+    padding: 30px;
+
+    border: 1px solid #dfe5ea;
+
+    border-radius: 16px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 5px 20px rgba(
+            23,
+            33,
+            43,
+            0.04
+        );
+}
+
+
+/* ============================================================
+   SECTION HEADER
+   ============================================================ */
+
+.section-head {
+    margin-bottom: 26px;
+}
+
+
+.section-head h2 {
+    margin: 0 0 6px;
+
+    color: #17212b;
+
+    font-size: 24px;
+
+    font-weight: 720;
+}
+
+
+.section-head .hint {
+    margin: 0;
+
+    color: #687887;
+
+    font-size: 14px;
+}
+
+
+/* ============================================================
+   MAIN GRID
+   ============================================================ */
+
+.grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(420px, 0.9fr)
+        minmax(500px, 1.1fr);
+
+    gap: 30px;
+
+    align-items: start;
+}
+
+
+/* ============================================================
+   FORM PANEL
+   ============================================================ */
+
+.form-panel {
+    min-width: 0;
+}
+
+
+.form-panel label {
+    display: block;
+
+    margin: 0 0 7px;
+
+    color: #263746;
+
+    font-size: 13px;
+
+    font-weight: 650;
+}
+
+
+/* ============================================================
+   TWO COLUMN FORM
+   ============================================================ */
+
+.two-col {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+    gap: 16px;
+
+    margin-bottom: 16px;
+}
+
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+
+input,
+select,
+textarea {
+    width: 100%;
+
+    border: 1px solid #d1d9e0;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #17212b;
+
+    font-family: inherit;
+
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+input,
+select {
+    min-height: 44px;
+
+    padding: 0 13px;
+}
+
+
+textarea {
+    min-height: 90px;
+
+    padding: 12px 13px;
+
+    resize: vertical;
+
+    margin-bottom: 16px;
+}
+
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #6d7d8b;
+
+    box-shadow:
+        0 0 0 3px rgba(
+            23,
+            33,
+            43,
+            0.08
+        );
+}
+
+
+input[type="file"] {
+    min-height: auto;
+
+    padding: 9px;
+
+    margin-bottom: 18px;
+
+    background: #fafbfc;
+
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   ACTION BUTTONS
+   ============================================================ */
+
+.actions {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    align-items: center;
+
+    gap: 9px;
+}
+
+
+button,
+.file-btn {
+    border: 1px solid #17212b;
+
+    border-radius: 8px;
+
+    background: #17212b;
+
+    color: #ffffff;
+
+    padding: 10px 16px;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    font-weight: 650;
+
+    cursor: pointer;
+
+    text-decoration: none;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+button:hover,
+.file-btn:hover {
+    background: #293744;
+
+    border-color: #293744;
+}
+
+
+button:active,
+.file-btn:active {
+    transform: translateY(1px);
+}
+
+
+button:disabled {
+    opacity: 0.45;
+
+    cursor: not-allowed;
+
+    box-shadow: none;
+}
+
+
+button.secondary,
+.file-btn.secondary {
+    background: #f0f3f5;
+
+    color: #273746;
+
+    border-color: #d4dce2;
+}
+
+
+button.secondary:hover,
+.file-btn.secondary:hover {
+    background: #e5eaee;
+
+    border-color: #c6d0d8;
+}
+
+
+button.ghost {
+    background: #ffffff;
+
+    color: #53616f;
+
+    border-color: #d3dae1;
+}
+
+
+button.ghost:hover {
+    background: #f3f5f7;
+
+    color: #17212b;
+}
+
+
+/* ============================================================
+   STATUS
+   ============================================================ */
+
+.status {
+    min-height: 20px;
+
+    margin-top: 10px;
+
+    color: #627282;
+
+    font-size: 13px;
+}
+
+
+/* ============================================================
+   PREVIEW PANEL
+   ============================================================ */
+
+.preview-panel {
+    min-width: 0;
+}
+
+
+.canvas-wrap {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-height: 440px;
+
+    width: 100%;
+
+    overflow: hidden;
+
+    border: 1px solid #dfe5ea;
+
+    border-radius: 12px;
+
+    background-color: #ffffff;
+
+    background-image:
+        linear-gradient(
+            45deg,
+            #f1f4f6 25%,
+            transparent 25%
+        ),
+        linear-gradient(
+            -45deg,
+            #f1f4f6 25%,
+            transparent 25%
+        ),
+        linear-gradient(
+            45deg,
+            transparent 75%,
+            #f1f4f6 75%
+        ),
+        linear-gradient(
+            -45deg,
+            transparent 75%,
+            #f1f4f6 75%
+        );
+
+    background-size: 24px 24px;
+
+    background-position:
+        0 0,
+        0 12px,
+        12px -12px,
+        -12px 0;
+}
+
+
+#cardCanvas {
+    display: block;
+
+    max-width: 94%;
+
+    max-height: 600px;
+
+    width: auto;
+
+    height: auto;
+
+    object-fit: contain;
+}
+
+
+.empty-preview {
+    position: absolute;
+
+    top: 50%;
+
+    left: 50%;
+
+    transform:
+        translate(
+            -50%,
+            -50%
+        );
+
+    color: #7b8995;
+
+    font-size: 14px;
+
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   PREVIEW DOWNLOAD AREA
+   ============================================================ */
+
+.preview-panel > .actions {
+    margin-top: 12px;
+}
+
+
+/* ============================================================
+   BULK UPLOAD GRID
+   ============================================================ */
+
+.upload-grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+    gap: 18px;
+
+    margin-bottom: 20px;
+}
+
+
+.upload-box {
+    padding: 20px;
+
+    border: 1px dashed #cbd4dc;
+
+    border-radius: 12px;
+
+    background: #fafbfc;
+}
+
+
+.upload-box strong {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #263746;
+
+    font-size: 14px;
+}
+
+
+.upload-box .hint {
+    display: block;
+
+    margin-bottom: 15px;
+
+    color: #687887;
+
+    font-size: 13px;
+}
+
+
+/* ============================================================
+   BATCH SUMMARY
+   ============================================================ */
+
+.batch-summary {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 28px;
+
+    padding: 15px 18px;
+
+    margin-bottom: 14px;
+
+    border: 1px solid #dfe5ea;
+
+    border-radius: 10px;
+
+    background: #f8fafb;
+
+    color: #53616f;
+
+    font-size: 13px;
+}
+
+
+.batch-summary b {
+    margin-left: 4px;
+
+    color: #17212b;
+
+    font-weight: 750;
+}
+
+
+/* ============================================================
+   ROW BETWEEN
+   ============================================================ */
+
+.row-between {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 18px;
+}
+
+
+.batch-actions {
+    margin: 18px 0;
+}
+
+
+.batch-actions h3 {
+    margin: 0;
+
+    color: #17212b;
+
+    font-size: 18px;
+}
+
+
+/* ============================================================
+   BATCH TABLE CONTAINER
+   ============================================================ */
+
+.table-wrap {
+    width: 100%;
+
+    overflow-x: auto;
+
+    border: 1px solid #dfe5ea;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+}
+
+
+/* ============================================================
+   BATCH TABLE
+   ============================================================ */
+
+#batchTable {
+    width: 100%;
+
+    min-width: 1100px;
+
+    border-collapse: collapse;
+
+    table-layout: fixed;
+
+    background: #ffffff;
+}
+
+
+/* ============================================================
+   BATCH TABLE HEADER
+   ============================================================ */
+
+#batchTable thead th {
+    padding: 12px 13px;
+
+    border-bottom: 1px solid #dfe5ea;
+
+    background: #f6f8fa;
+
+    color: #334554;
+
+    text-align: left;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    vertical-align: middle;
+}
+
+
+/* ============================================================
+   BATCH TABLE COLUMN WIDTHS
+   ============================================================ */
+
+#batchTable th:nth-child(1),
+#batchTable td:nth-child(1) {
+    width: 45px;
+}
+
+
+#batchTable th:nth-child(2),
+#batchTable td:nth-child(2) {
+    width: 150px;
+}
+
+
+#batchTable th:nth-child(3),
+#batchTable td:nth-child(3) {
+    width: 160px;
+}
+
+
+#batchTable th:nth-child(4),
+#batchTable td:nth-child(4) {
+    width: 105px;
+}
+
+
+#batchTable th:nth-child(5),
+#batchTable td:nth-child(5) {
+    width: 90px;
+}
+
+
+#batchTable th:nth-child(6),
+#batchTable td:nth-child(6) {
+    width: 120px;
+}
+
+
+#batchTable th:nth-child(7),
+#batchTable td:nth-child(7) {
+    width: 140px;
+}
+
+
+#batchTable th:nth-child(8),
+#batchTable td:nth-child(8) {
+    width: 250px;
+}
+
+
+/* ============================================================
+   BATCH TABLE ROW
+   ============================================================
+
+   Important:
+   The row must NOT be allowed to grow because of the
+   original photo dimensions.
+   ============================================================ */
+
+#batchTable tbody tr {
+    height: 112px;
+
+    border-bottom: 1px solid #edf0f2;
+
+    background: #ffffff;
+}
+
+
+#batchTable tbody tr:last-child {
+    border-bottom: 0;
+}
+
+
+#batchTable tbody tr:hover {
+    background: #fafbfc;
+}
+
+
+/* ============================================================
+   BATCH TABLE CELLS
+   ============================================================ */
+
+#batchTable tbody td {
+    height: 112px;
+
+    padding: 8px 13px;
+
+    border-bottom: 1px solid #edf0f2;
+
+    color: #394b5a;
+
+    font-size: 13px;
+
+    line-height: 1.4;
+
+    vertical-align: middle;
+
+    overflow: hidden;
+
+    word-break: break-word;
+}
+
+
+/* ============================================================
+   RECORD NUMBER
+   ============================================================ */
+
+#batchTable td:first-child {
+    color: #53616f;
+
+    font-weight: 600;
+
+    text-align: left;
+}
+
+
+/* ============================================================
+   PHOTO CELL
+   ============================================================ */
+
+#batchTable td:nth-child(2) {
+    width: 150px;
+
+    padding: 8px 13px;
+
+    vertical-align: middle;
+
+    overflow: hidden;
+}
+
+
+/* ============================================================
+   PHOTO THUMBNAIL
+   ============================================================
+
+   Fixed dimensions prevent the original image from
+   controlling the table row height.
+   ============================================================ */
+
+#batchTable td:nth-child(2) img {
+    display: block;
+
+    width: 80px;
+
+    height: 90px;
+
+    max-width: 80px;
+
+    max-height: 90px;
+
+    object-fit: cover;
+
+    object-position: center;
+
+    border: 1px solid #d9e0e6;
+
+    border-radius: 6px;
+
+    background: #f3f5f7;
+}
+
+
+/* ============================================================
+   PHOTO INFORMATION
+   ============================================================ */
+
+#batchTable td:nth-child(2) .photo-info {
+    display: block;
+
+    width: 120px;
+
+    max-width: 120px;
+
+    margin-top: 4px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    color: #687887;
+
+    font-size: 11px;
+
+    line-height: 1.3;
+}
+
+
+/* ============================================================
+   MATCHED PHOTO STATUS
+   ============================================================ */
+
+#batchTable td:nth-child(2) .photo-matched,
+#batchTable td:nth-child(2) .matched {
+    color: #526879;
+
+    font-size: 11px;
+}
+
+
+/* ============================================================
+   MISSING PHOTO
+   ============================================================
+
+   Any missing-photo status should appear clearly in RED.
+   Supports the common class names used for missing states.
+   ============================================================ */
+
+#batchTable td:nth-child(2) .photo-missing,
+#batchTable td:nth-child(2) .missing-photo,
+#batchTable td:nth-child(2) .missing,
+#batchTable td:nth-child(2) .photo-info.missing,
+#batchTable td:nth-child(2) [class*="missing"] {
+    color: #d93025 !important;
+
+    font-weight: 650;
+}
+
+
+/* ============================================================
+   MISSING PHOTO CELL
+
+   Keeps the missing state compact and aligned.
+   ============================================================ */
+
+#batchTable td:nth-child(2).photo-missing,
+#batchTable td:nth-child(2).missing-photo {
+    color: #d93025;
+
+    font-weight: 650;
+}
+
+
+/* ============================================================
+   MISSING PHOTO PLACEHOLDER
+
+   If the application renders a placeholder instead of
+   an image, keep the placeholder compact.
+   ============================================================ */
+
+#batchTable td:nth-child(2) .photo-placeholder {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 80px;
+
+    height: 90px;
+
+    border: 1px dashed #e2a4a0;
+
+    border-radius: 6px;
+
+    background: #fff7f6;
+
+    color: #d93025;
+
+    font-size: 11px;
+
+    font-weight: 650;
+
+    text-align: center;
+}
+
+
+/* ============================================================
+   GENERAL CELL ALIGNMENT
+   ============================================================ */
+
+#batchTable td:nth-child(3),
+#batchTable td:nth-child(4),
+#batchTable td:nth-child(5),
+#batchTable td:nth-child(6),
+#batchTable td:nth-child(7) {
+    vertical-align: middle;
+}
+
+
+/* ============================================================
+   ADDRESS CELL
+   ============================================================ */
+
+#batchTable td:nth-child(8) {
+    white-space: normal;
+
+    line-height: 1.45;
+}
+
+
+/* ============================================================
+   EMPTY TABLE MESSAGE
+   ============================================================ */
+
+#batchTable .empty-cell {
+    height: auto;
+
+    padding: 30px;
+
+    color: #7a8792;
+
+    text-align: center;
+
+    background: #ffffff;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1050px) {
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .canvas-wrap {
+        min-height: 380px;
+    }
+
+}
+
+
+@media (max-width: 760px) {
+
+    .container {
+        width: calc(100% - 20px);
+
+        margin: 10px auto 20px;
+
+        padding: 20px;
+
+        border-radius: 12px;
+    }
+
+
+    .app-header {
+        flex-direction: column;
+
+        margin-bottom: 22px;
+    }
+
+
+    .app-header h1 {
+        font-size: 27px;
+    }
+
+
+    .category-tabs {
+        width: 100%;
+    }
+
+
+    .category-btn {
+        flex: 1;
+
+        min-width: 0;
+    }
+
+
+    .mode-tabs {
+        width: 100%;
+    }
+
+
+    .mode-btn {
+        flex: 1;
+    }
+
+
+    .card {
+        padding: 20px;
+    }
+
+
+    .two-col {
+        grid-template-columns: 1fr;
+
+        gap: 0;
+    }
+
+
+    .upload-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .row-between {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+
+    .batch-actions .actions {
+        width: 100%;
+    }
+
+
+    .batch-actions .actions button {
+        flex: 1;
+    }
+
+
+    #batchTable {
+        min-width: 1100px;
+    }
+
+}
