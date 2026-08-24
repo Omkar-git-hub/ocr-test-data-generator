@@ -2,17 +2,26 @@
 // FILE: js/document-renderer.js
 //
 // PURPOSE:
-//     Render synthetic OCR test documents using the PNG
-//     templates supplied by streamlit_app.py.
+//     Render synthetic OCR test documents using the existing
+//     PAN and Aadhaar PNG templates.
 //
 // TEMPLATE SOURCES:
-//     window.PAN_TEMPLATE_BASE64
-//     window.AADHAAR_TEMPLATE_BASE64
+//     1. Vercel:
+//        window.PAN_TEMPLATE_BASE64
+//        window.AADHAAR_TEMPLATE_BASE64
+//
+//     2. Local development:
+//        templates/PAN_Template.png
+//        templates/AADHAR_Template.png
+//
+// IMPORTANT:
+//     Existing PAN/Aadhaar coordinates and rendering behaviour
+//     are preserved.
 // ============================================================
 
 
 // ============================================================
-// PAN TEMPLATE
+// PAN TEMPLATE CONFIGURATION
 // ============================================================
 
 const PAN_TEMPLATE_CONFIG = {
@@ -65,7 +74,7 @@ const PAN_TEMPLATE_CONFIG = {
 
 
 // ============================================================
-// AADHAAR TEMPLATE
+// AADHAAR TEMPLATE CONFIGURATION
 // ============================================================
 
 const AADHAAR_TEMPLATE_CONFIG = {
@@ -144,7 +153,14 @@ async function drawSyntheticDocument(
             : AADHAAR_TEMPLATE_CONFIG;
 
 
-    const templateDataUrl =
+    // --------------------------------------------------------
+    // TEMPLATE SOURCE
+    //
+    // Vercel uses embedded Base64 templates.
+    // Local development uses the PNG files directly.
+    // --------------------------------------------------------
+
+    let templateDataUrl =
         documentType === "PAN"
             ? window.PAN_TEMPLATE_BASE64
             : window.AADHAAR_TEMPLATE_BASE64;
@@ -152,11 +168,16 @@ async function drawSyntheticDocument(
 
     if (!templateDataUrl) {
 
-        throw new Error(
-            `${documentType} PNG template is not loaded.`
-        );
+        templateDataUrl =
+            documentType === "PAN"
+                ? "templates/PAN_Template.png"
+                : "templates/AADHAR_Template.png";
     }
 
+
+    // --------------------------------------------------------
+    // LOAD TEMPLATE
+    // --------------------------------------------------------
 
     const template =
         await loadTemplateImage(
@@ -188,7 +209,7 @@ async function drawSyntheticDocument(
 
 
     // --------------------------------------------------------
-    // 1. Draw PNG template
+    // 1. DRAW PNG TEMPLATE
     // --------------------------------------------------------
 
     ctx.drawImage(
@@ -201,7 +222,7 @@ async function drawSyntheticDocument(
 
 
     // --------------------------------------------------------
-    // 2. Draw dynamic data
+    // 2. DRAW DYNAMIC DATA
     // --------------------------------------------------------
 
     if (documentType === "PAN") {
@@ -223,7 +244,7 @@ async function drawSyntheticDocument(
 
 
     // --------------------------------------------------------
-    // 3. Draw uploaded photo
+    // 3. DRAW UPLOADED PHOTO
     // --------------------------------------------------------
 
     await drawTemplatePhoto(
@@ -234,7 +255,9 @@ async function drawSyntheticDocument(
 
 
     // --------------------------------------------------------
-    // 4. Add synthetic test marker
+    // 4. SYNTHETIC TEST MARKER
+    //
+    // Disabled intentionally.
     // --------------------------------------------------------
 
     // drawSyntheticMarker(
@@ -487,7 +510,7 @@ function drawCenteredText(
 
 
 // ============================================================
-// FIT TEXT
+// FIT TEXT TO WIDTH
 // ============================================================
 
 function fitTextToWidth(
@@ -525,7 +548,7 @@ function fitTextToWidth(
 
 
 // ============================================================
-// PHOTO
+// PHOTO RENDERING
 // ============================================================
 
 function drawTemplatePhoto(
@@ -538,7 +561,9 @@ function drawTemplatePhoto(
         resolve => {
 
             if (!photoDataUrl) {
+
                 resolve();
+
                 return;
             }
 
@@ -554,12 +579,14 @@ function drawTemplatePhoto(
 
                 ctx.beginPath();
 
+
                 ctx.rect(
                     config.x,
                     config.y,
                     config.width,
                     config.height
                 );
+
 
                 ctx.clip();
 
@@ -586,6 +613,11 @@ function drawTemplatePhoto(
                 let drawY =
                     config.y;
 
+
+                // ------------------------------------------------
+                // Cover the complete photo area while preserving
+                // the original aspect ratio.
+                // ------------------------------------------------
 
                 if (
                     imageRatio > boxRatio
@@ -634,11 +666,16 @@ function drawTemplatePhoto(
 
                 ctx.restore();
 
+
                 resolve();
             };
 
 
             image.onerror = () => {
+
+                // Photo failure should not stop
+                // document generation.
+
                 resolve();
             };
 
@@ -665,6 +702,7 @@ function formatAadhaarNumber(
 
 
     if (!digits) {
+
         return "";
     }
 
@@ -791,6 +829,9 @@ function enableCoordinatePicker(
 
 // ============================================================
 // EXPOSE CONFIGURATION
+//
+// Makes the current template configuration available to
+// the rest of the application and debugging tools.
 // ============================================================
 
 window.OCR_TEMPLATE_CONFIG = {
