@@ -5,9 +5,15 @@
 #     Streamlit deployment adapter for the scalable OCR
 #     Test Data Generator.
 #
-#     The actual application remains browser-based HTML/CSS/JS.
-#     Streamlit only prepares the files and injects them into
-#     the browser.
+# RESPONSIBILITIES:
+#     1. Load HTML
+#     2. Load CSS
+#     3. Load JavaScript modules
+#     4. Load Excel template
+#     5. Load bulk-upload photos
+#     6. Load PAN/Aadhaar templates
+#     7. Inject runtime data into browser
+#     8. Render the application responsively
 #
 # SUPPORTED:
 #     - Individual PAN
@@ -18,6 +24,7 @@
 #     - Bulk photos
 #     - JPEG download
 # ============================================================
+
 
 import base64
 import json
@@ -41,6 +48,132 @@ st.set_page_config(
 
 
 # ============================================================
+# STREAMLIT HOST STYLING
+# ============================================================
+
+st.markdown(
+    """
+    <style>
+
+        /* ====================================================
+           REMOVE STREAMLIT TOP HEADER / BLACK STRIP
+           ==================================================== */
+
+        header[data-testid="stHeader"] {
+            display: none !important;
+        }
+
+        [data-testid="stHeader"] {
+            display: none !important;
+        }
+
+
+        /* ====================================================
+           REMOVE STREAMLIT TOP DECORATION
+           ==================================================== */
+
+        [data-testid="stDecoration"] {
+            display: none !important;
+        }
+
+
+        /* ====================================================
+           STREAMLIT APP BACKGROUND
+           ==================================================== */
+
+        .stApp {
+            background: #ffffff !important;
+        }
+
+        .main {
+            background: #ffffff !important;
+        }
+
+
+        /* ====================================================
+           REMOVE DEFAULT TOP SPACING
+           ==================================================== */
+
+        .block-container {
+            max-width: 100% !important;
+
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+
+            margin: 0 !important;
+        }
+
+
+        /* ====================================================
+           STREAMLIT MAIN CONTAINER
+           ==================================================== */
+
+        [data-testid="stAppViewContainer"] {
+            background: #ffffff !important;
+
+            padding: 0 !important;
+
+            margin: 0 !important;
+
+            overflow-x: hidden !important;
+        }
+
+
+        /* ====================================================
+           STREAMLIT MAIN CONTENT
+           ==================================================== */
+
+        [data-testid="stMain"] {
+            padding: 0 !important;
+
+            margin: 0 !important;
+
+            background: #ffffff !important;
+        }
+
+
+        /* ====================================================
+           EMBEDDED APPLICATION IFRAME
+           ==================================================== */
+
+        iframe {
+            width: 100% !important;
+
+            border: none !important;
+
+            display: block !important;
+
+            margin: 0 !important;
+
+            padding: 0 !important;
+        }
+
+
+        /* ====================================================
+           REMOVE STREAMLIT VERTICAL GAPS
+           ==================================================== */
+
+        [data-testid="stVerticalBlock"] {
+            gap: 0 !important;
+        }
+
+
+        /* ====================================================
+           HORIZONTAL OVERFLOW
+           ==================================================== */
+
+        body {
+            overflow-x: hidden !important;
+        }
+
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ============================================================
 # PROJECT ROOT
 # ============================================================
 
@@ -52,12 +185,17 @@ BASE_DIR = Path(__file__).resolve().parent
 # ============================================================
 
 INDEX_FILE = (
-    BASE_DIR / "index.html"
+    BASE_DIR
+    / "index.html"
 )
 
+
 CSS_FILE = (
-    BASE_DIR / "css" / "style.css"
+    BASE_DIR
+    / "css"
+    / "style.css"
 )
+
 
 TEMPLATE_EXCEL = (
     BASE_DIR
@@ -153,6 +291,7 @@ PAN_TEMPLATE = (
     / "PAN_Template.png"
 )
 
+
 AADHAAR_TEMPLATE = (
     BASE_DIR
     / "templates"
@@ -167,8 +306,7 @@ AADHAAR_TEMPLATE = (
 #
 # Entity PAN currently uses the shared Individual PAN template.
 #
-# The Entity renderer can therefore use the same Base64 PAN
-# template without requiring a duplicate file.
+# This avoids maintaining duplicate PAN template files.
 # ============================================================
 
 ENTITY_PAN_TEMPLATE = PAN_TEMPLATE
@@ -190,6 +328,15 @@ SUPPORTED_IMAGE_EXTENSIONS = {
     ".png",
     ".webp",
     ".gif",
+}
+
+
+PHOTO_MIME_TYPES = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".gif": "image/gif",
 }
 
 
@@ -250,7 +397,6 @@ def file_to_data_url(
     file_path: Path,
     mime_type: str,
 ) -> str:
-
     """
     Convert a local file into a browser-compatible
     Base64 Data URL.
@@ -292,15 +438,6 @@ aadhaar_template_base64 = file_to_data_url(
 bulk_photos = {}
 
 
-PHOTO_MIME_TYPES = {
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".png": "image/png",
-    ".webp": "image/webp",
-    ".gif": "image/gif",
-}
-
-
 for photo_file in sorted(
     PHOTO_DIR.iterdir()
 ):
@@ -308,15 +445,18 @@ for photo_file in sorted(
     if not photo_file.is_file():
         continue
 
+
     extension = (
         photo_file.suffix.lower()
     )
+
 
     if (
         extension
         not in SUPPORTED_IMAGE_EXTENSIONS
     ):
         continue
+
 
     try:
 
@@ -326,6 +466,7 @@ for photo_file in sorted(
             photo_file,
             PHOTO_MIME_TYPES[extension],
         )
+
 
     except Exception as error:
 
@@ -356,7 +497,7 @@ css = CSS_FILE.read_text(
 # ============================================================
 # REMOVE LOCAL CSS REFERENCES
 #
-# CSS is injected directly below.
+# CSS is injected directly into the generated document.
 # ============================================================
 
 html = re.sub(
@@ -370,9 +511,9 @@ html = re.sub(
 # ============================================================
 # REMOVE LOCAL JAVASCRIPT REFERENCES
 #
-# All application JS is bundled below.
+# All application JavaScript is bundled directly below.
 #
-# External scripts such as SheetJS/JSZip are NOT removed.
+# External scripts such as SheetJS and JSZip are preserved.
 # ============================================================
 
 html = re.sub(
@@ -393,7 +534,8 @@ javascript_parts = []
 for js_file in JS_FILES:
 
     relative_name = (
-        js_file.relative_to(BASE_DIR)
+        js_file
+        .relative_to(BASE_DIR)
         .as_posix()
     )
 
@@ -406,21 +548,22 @@ for js_file in JS_FILES:
     # --------------------------------------------------------
     # ENTITY PAN TEMPLATE
     #
-    # The Entity renderer normally points to:
+    # Entity renderer normally references:
     #
     # templates/individual/id/PAN_Template.png
     #
     # That relative path is not reliable inside the
-    # Streamlit components iframe.
+    # Streamlit component iframe.
     #
-    # Replace the path with the Base64 template that Streamlit
-    # injects into window.PAN_TEMPLATE_BASE64.
+    # Replace it with the Base64 template injected into:
     #
-    # Regex is used so both single-quoted and double-quoted
-    # versions are handled reliably.
+    # window.PAN_TEMPLATE_BASE64
     # --------------------------------------------------------
 
-    if relative_name == "js/entity/document-renderer.js":
+    if (
+        relative_name
+        == "js/entity/document-renderer.js"
+    ):
 
         source = re.sub(
             r"""["']templates/individual/id/PAN_Template\.png["']""",
@@ -428,6 +571,10 @@ for js_file in JS_FILES:
             source,
         )
 
+
+    # --------------------------------------------------------
+    # Add module source
+    # --------------------------------------------------------
 
     javascript_parts.append(
         f"""
@@ -484,6 +631,78 @@ window.BULK_PHOTO_COUNT =
 
 
 # ============================================================
+# STREAMLIT RESPONSIVE HOST FIX
+#
+# The embedded application is rendered inside an iframe.
+#
+# These rules ensure:
+#
+#     1. No black/grey page around the application
+#     2. No unnecessary body margin
+#     3. Full iframe width
+#     4. No horizontal overflow
+#     5. Application keeps its own responsive CSS
+# ============================================================
+
+HOST_CSS = """
+html,
+body {
+
+    margin: 0;
+
+    padding: 0;
+
+    width: 100%;
+
+    min-height: 100%;
+
+    background: #ffffff;
+
+}
+
+
+html {
+
+    overflow-x: hidden;
+
+}
+
+
+body {
+
+    overflow-x: hidden;
+
+    background: #ffffff;
+
+}
+
+
+* {
+
+    box-sizing: border-box;
+
+}
+
+
+img {
+
+    max-width: 100%;
+
+}
+
+
+button,
+input,
+select,
+textarea {
+
+    max-width: 100%;
+
+}
+"""
+
+
+# ============================================================
 # FINAL HTML
 # ============================================================
 
@@ -496,10 +715,18 @@ final_html = f"""
 
     <meta charset="UTF-8">
 
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
+
+
+    <meta
+        name="color-scheme"
+        content="light"
+    >
+
 
     <title>
         Test Data Generator
@@ -530,6 +757,8 @@ final_html = f"""
 
     <style>
 
+        {HOST_CSS}
+
         {css}
 
     </style>
@@ -559,6 +788,7 @@ final_html = f"""
 
     </script>
 
+
 </body>
 
 </html>
@@ -567,10 +797,13 @@ final_html = f"""
 
 # ============================================================
 # RENDER APPLICATION
+#
+# Increased height prevents the Streamlit iframe from becoming
+# unnecessarily constrained vertically.
 # ============================================================
 
 components.html(
     final_html,
-    height=900,
+    height=1100,
     scrolling=True,
 )
