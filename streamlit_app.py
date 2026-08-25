@@ -2,21 +2,26 @@
 # FILE: streamlit_app.py
 #
 # PURPOSE:
-#     Streamlit entry point for the synthetic OCR test-data
-#     generator.
+#     Streamlit deployment adapter for the scalable OCR
+#     Test Data Generator.
 #
-# RESPONSIBILITIES:
-#     1. Load HTML
-#     2. Load CSS
-#     3. Load JavaScript files
-#     4. Load Excel template
-#     5. Load bulk-upload photos
-#     6. Load PAN/Aadhaar PNG templates
-#     7. Inject all required data into the browser
+#     The actual application remains browser-based HTML/CSS/JS.
+#     Streamlit only prepares the files and injects them into
+#     the browser.
+#
+# SUPPORTED:
+#     - Individual PAN
+#     - Individual Aadhaar
+#     - Entity PAN
+#     - Manual Input
+#     - Bulk Excel
+#     - Bulk photos
+#     - JPEG download
 # ============================================================
 
 import base64
 import json
+import re
 from pathlib import Path
 
 import streamlit as st
@@ -36,14 +41,14 @@ st.set_page_config(
 
 
 # ============================================================
-# PROJECT PATH
+# PROJECT ROOT
 # ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent
 
 
 # ============================================================
-# CORE PROJECT FILES
+# CORE FILES
 # ============================================================
 
 INDEX_FILE = (
@@ -54,13 +59,6 @@ CSS_FILE = (
     BASE_DIR / "css" / "style.css"
 )
 
-JS_FILES = [
-    BASE_DIR / "js" / "data-generator.js",
-    BASE_DIR / "js" / "document-renderer.js",
-    BASE_DIR / "js" / "image-export.js",
-    BASE_DIR / "js" / "app.js",
-]
-
 TEMPLATE_EXCEL = (
     BASE_DIR
     / "sample"
@@ -69,22 +67,111 @@ TEMPLATE_EXCEL = (
 
 
 # ============================================================
-# DOCUMENT TEMPLATES
+# JAVASCRIPT MODULES
 #
-# These are the background templates used by the renderer.
+# IMPORTANT:
+#     Order matters.
+#
+#     Shared configuration/utilities are loaded first.
+#     Individual and Entity modules are then loaded in
+#     dependency order.
+# ============================================================
+
+JS_FILES = [
+
+    # --------------------------------------------------------
+    # Shared
+    # --------------------------------------------------------
+
+    BASE_DIR
+    / "js"
+    / "documents.js",
+
+    BASE_DIR
+    / "js"
+    / "image-export.js",
+
+
+    # --------------------------------------------------------
+    # Individual module
+    # --------------------------------------------------------
+
+    BASE_DIR
+    / "js"
+    / "individual"
+    / "data-generator.js",
+
+    BASE_DIR
+    / "js"
+    / "individual"
+    / "document-renderer.js",
+
+    BASE_DIR
+    / "js"
+    / "individual"
+    / "app.js",
+
+
+    # --------------------------------------------------------
+    # Entity module
+    # --------------------------------------------------------
+
+    BASE_DIR
+    / "js"
+    / "entity"
+    / "data-generator.js",
+
+    BASE_DIR
+    / "js"
+    / "entity"
+    / "document-renderer.js",
+
+    BASE_DIR
+    / "js"
+    / "entity"
+    / "app.js",
+]
+
+
+# ============================================================
+# INDIVIDUAL DOCUMENT TEMPLATES
+#
+# Current scalable structure:
+#
+# templates/
+#   individual/
+#       id/
+#           PAN_Template.png
+#           AADHAR_Template.png
 # ============================================================
 
 PAN_TEMPLATE = (
     BASE_DIR
     / "templates"
+    / "individual"
+    / "id"
     / "PAN_Template.png"
 )
 
 AADHAAR_TEMPLATE = (
     BASE_DIR
     / "templates"
+    / "individual"
+    / "id"
     / "AADHAR_Template.png"
 )
+
+
+# ============================================================
+# ENTITY TEMPLATE
+#
+# Entity PAN currently uses the shared Individual PAN template.
+#
+# The Entity renderer can therefore use the same Base64 PAN
+# template without requiring a duplicate file.
+# ============================================================
+
+ENTITY_PAN_TEMPLATE = PAN_TEMPLATE
 
 
 # ============================================================
@@ -121,7 +208,9 @@ required_files = [
 
 
 missing_files = [
-    str(file.relative_to(BASE_DIR))
+    str(
+        file.relative_to(BASE_DIR)
+    )
     for file in required_files
     if not file.exists()
 ]
@@ -130,7 +219,11 @@ missing_files = [
 if missing_files:
 
     st.error(
-        "Required project files are missing:"
+        "Required project files are missing."
+    )
+
+    st.write(
+        "The following files could not be found:"
     )
 
     for file in missing_files:
@@ -157,6 +250,7 @@ def file_to_data_url(
     file_path: Path,
     mime_type: str,
 ) -> str:
+
     """
     Convert a local file into a browser-compatible
     Base64 Data URL.
@@ -198,6 +292,15 @@ aadhaar_template_base64 = file_to_data_url(
 bulk_photos = {}
 
 
+PHOTO_MIME_TYPES = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".gif": "image/gif",
+}
+
+
 for photo_file in sorted(
     PHOTO_DIR.iterdir()
 ):
@@ -209,16 +312,11 @@ for photo_file in sorted(
         photo_file.suffix.lower()
     )
 
-    if extension not in SUPPORTED_IMAGE_EXTENSIONS:
+    if (
+        extension
+        not in SUPPORTED_IMAGE_EXTENSIONS
+    ):
         continue
-
-    mime_types = {
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".png": "image/png",
-        ".webp": "image/webp",
-        ".gif": "image/gif",
-    }
 
     try:
 
@@ -226,7 +324,7 @@ for photo_file in sorted(
             photo_file.name
         ] = file_to_data_url(
             photo_file,
-            mime_types[extension],
+            PHOTO_MIME_TYPES[extension],
         )
 
     except Exception as error:
@@ -256,6 +354,36 @@ css = CSS_FILE.read_text(
 
 
 # ============================================================
+# REMOVE LOCAL CSS REFERENCES
+#
+# CSS is injected directly below.
+# ============================================================
+
+html = re.sub(
+    r'<link[^>]+href=["\'](?:\./)?css/style\.css["\'][^>]*>',
+    "",
+    html,
+    flags=re.IGNORECASE,
+)
+
+
+# ============================================================
+# REMOVE LOCAL JAVASCRIPT REFERENCES
+#
+# All application JS is bundled below.
+#
+# External scripts such as SheetJS/JSZip are NOT removed.
+# ============================================================
+
+html = re.sub(
+    r'<script[^>]+src=["\'](?:\./)?js/[^"\']+["\'][^>]*>\s*</script>',
+    "",
+    html,
+    flags=re.IGNORECASE,
+)
+
+
+# ============================================================
 # READ JAVASCRIPT
 # ============================================================
 
@@ -264,13 +392,51 @@ javascript_parts = []
 
 for js_file in JS_FILES:
 
+    relative_name = (
+        js_file.relative_to(BASE_DIR)
+        .as_posix()
+    )
+
+
+    source = js_file.read_text(
+        encoding="utf-8"
+    )
+
+
+    # --------------------------------------------------------
+    # ENTITY PAN TEMPLATE
+    #
+    # The Entity renderer normally points to:
+    #
+    # templates/individual/id/PAN_Template.png
+    #
+    # That relative path is not reliable inside the
+    # Streamlit components iframe.
+    #
+    # Replace the path with the Base64 template that Streamlit
+    # injects into window.PAN_TEMPLATE_BASE64.
+    #
+    # Regex is used so both single-quoted and double-quoted
+    # versions are handled reliably.
+    # --------------------------------------------------------
+
+    if relative_name == "js/entity/document-renderer.js":
+
+        source = re.sub(
+            r"""["']templates/individual/id/PAN_Template\.png["']""",
+            "window.PAN_TEMPLATE_BASE64",
+            source,
+        )
+
+
     javascript_parts.append(
         f"""
 // ============================================================
-// LOADED FILE: {js_file.name}
+// LOADED FILE:
+// {relative_name}
 // ============================================================
 
-{js_file.read_text(encoding="utf-8")}
+{source}
 """
     )
 
@@ -281,53 +447,31 @@ javascript = "\n".join(
 
 
 # ============================================================
-# READ EXCEL TEMPLATE
+# LOAD EXCEL TEMPLATE
 # ============================================================
 
-excel_template_base64 = base64.b64encode(
-    TEMPLATE_EXCEL.read_bytes()
-).decode("utf-8")
-
-
-# ============================================================
-# REMOVE LOCAL CSS REFERENCE
-# ============================================================
-
-html = html.replace(
-    '<link rel="stylesheet" href="css/style.css">',
-    "",
+excel_template_base64 = (
+    base64.b64encode(
+        TEMPLATE_EXCEL.read_bytes()
+    ).decode("utf-8")
 )
 
 
 # ============================================================
-# REMOVE LOCAL JAVASCRIPT REFERENCES
-#
-# Streamlit injects the JS itself below.
-# ============================================================
-
-for js_file in JS_FILES:
-
-    html = html.replace(
-        f'<script src="js/{js_file.name}"></script>',
-        "",
-    )
-
-
-# ============================================================
-# JAVASCRIPT DATA INJECTION
+# JAVASCRIPT RUNTIME DATA
 # ============================================================
 
 runtime_data = f"""
 <script>
 
 window.OCR_TEMPLATE_BASE64 =
-    "{excel_template_base64}";
+    {json.dumps(excel_template_base64)};
 
 window.PAN_TEMPLATE_BASE64 =
-    "{pan_template_base64}";
+    {json.dumps(pan_template_base64)};
 
 window.AADHAAR_TEMPLATE_BASE64 =
-    "{aadhaar_template_base64}";
+    {json.dumps(aadhaar_template_base64)};
 
 window.BULK_PHOTOS =
     {json.dumps(bulk_photos)};
@@ -358,7 +502,7 @@ final_html = f"""
     >
 
     <title>
-        D Card Generator
+        Test Data Generator
     </title>
 
 
@@ -399,7 +543,7 @@ final_html = f"""
 
 
     <!-- =====================================================
-         PYTHON -> JAVASCRIPT DATA
+         PYTHON -> JAVASCRIPT RUNTIME DATA
          ===================================================== -->
 
     {runtime_data}
@@ -427,6 +571,6 @@ final_html = f"""
 
 components.html(
     final_html,
-    height=700,
+    height=900,
     scrolling=True,
 )
