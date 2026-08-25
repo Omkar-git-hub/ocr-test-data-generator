@@ -1,39 +1,25 @@
 /* ============================================================
    TEST DATA GENERATOR
-   MAIN APPLICATION STYLES
-   ============================================================ */
-
-
-/* ============================================================
-   GLOBAL RESET
+   Compact responsive UI
    ============================================================ */
 
 * {
     box-sizing: border-box;
 }
 
-
-html {
-    margin: 0;
-    padding: 0;
-}
-
-
+html,
 body {
     margin: 0;
     padding: 0;
+    width: 100%;
+}
 
+body {
     background: #f4f6f8;
-
     color: #17212b;
-
-    font-family:
-        Inter,
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    line-height: 1.5;
+    font-family: Inter, Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    line-height: 1.3;
 }
 
 
@@ -42,296 +28,149 @@ body {
    ============================================================ */
 
 .container {
-    width: min(
-        1500px,
-        calc(100% - 40px)
-    );
+    width: calc(100% - 20px);
+    max-width: 1500px;
+    margin: 6px auto;
+    padding: 12px;
 
-    margin: 24px auto 40px;
-
-    padding: 34px;
-
-    background: #ffffff;
-
+    background: #fff;
     border: 1px solid #dfe5ea;
-
-    border-radius: 18px;
-
-    box-shadow:
-        0 8px 30px rgba(
-            23,
-            33,
-            43,
-            0.06
-        );
-}
-
-
-/* ============================================================
-   APPLICATION HEADER
-   ============================================================ */
-
-.app-header {
-    display: flex;
-
-    align-items: flex-start;
-
-    justify-content: space-between;
-
-    gap: 24px;
-
-    margin-bottom: 30px;
-}
-
-
-.app-header h1 {
-    margin: 0 0 8px;
-
-    color: #17212b;
-
-    font-size: 32px;
-
-    font-weight: 750;
-
-    letter-spacing: -0.6px;
-}
-
-
-.app-header .hint {
-    margin: 0;
-
-    color: #687887;
-
-    font-size: 15px;
-}
-
-
-.test-badge {
-    flex-shrink: 0;
-
-    padding: 8px 14px;
-
-    border-radius: 999px;
-
-    background: #edf2f6;
-
-    color: #4f6070;
-
-    font-size: 12px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.3px;
-}
-
-
-/* ============================================================
-   DOCUMENT CATEGORY
-   Individual / Entity
-
-   Primary navigation.
-   Selected category = BLACK.
-   ============================================================ */
-
-.category-tabs {
-    display: inline-flex;
-
-    align-items: center;
-
-    gap: 4px;
-
-    padding: 4px;
-
-    margin-bottom: 14px;
-
-    background: #eef1f4;
-
-    border: 1px solid #d9dfe5;
-
     border-radius: 12px;
 }
 
 
-.category-btn {
-    min-width: 135px;
+/* ============================================================
+   HEADER
+   ============================================================ */
 
-    padding: 11px 26px;
-
-    border: 1px solid transparent;
-
-    border-radius: 8px;
-
-    background: transparent;
-
-    color: #53616f;
-
-    cursor: pointer;
-
-    font-size: 14px;
-
-    font-weight: 650;
-
-    transition:
-        background 0.15s ease,
-        color 0.15s ease,
-        border-color 0.15s ease,
-        box-shadow 0.15s ease,
-        transform 0.15s ease;
+.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
 }
 
+.app-header h1 {
+    margin: 0 0 2px;
+    font-size: 23px;
+    line-height: 1.1;
+    font-weight: 750;
+    letter-spacing: -0.4px;
+}
+
+.app-header .hint {
+    margin: 0;
+    color: #687887;
+    font-size: 11px;
+}
+
+.test-badge {
+    flex-shrink: 0;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #edf2f6;
+    color: #4f6070;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   CATEGORY TABS
+   ============================================================ */
+
+.category-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    margin-bottom: 6px;
+
+    background: #eef1f4;
+    border: 1px solid #d9dfe5;
+    border-radius: 8px;
+}
+
+.category-btn {
+    min-width: 100px;
+    padding: 6px 14px;
+
+    border: 1px solid transparent;
+    border-radius: 6px;
+
+    background: transparent;
+    color: #53616f;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 650;
+
+    cursor: pointer;
+}
 
 .category-btn:hover {
     background: #e2e7eb;
-
     color: #17212b;
 }
 
-
-.category-btn:active {
-    transform: translateY(1px);
-}
-
-
-/* ============================================================
-   SELECTED CATEGORY
-   ============================================================ */
-
 .category-btn.active {
     background: #17212b;
-
-    color: #ffffff;
-
+    color: #fff;
     border-color: #17212b;
-
-    box-shadow:
-        0 3px 8px rgba(
-            20,
-            30,
-            40,
-            0.20
-        );
-}
-
-
-.category-btn.active:hover {
-    background: #17212b;
-
-    color: #ffffff;
-
-    border-color: #17212b;
+    box-shadow: 0 2px 6px rgba(20, 30, 40, .16);
 }
 
 
 /* ============================================================
-   GENERATION MODE
-   Manual Input / Bulk Excel
-
-   Secondary navigation.
+   MODE TABS
    ============================================================ */
 
 .mode-tabs {
     display: flex;
-
     align-items: center;
-
-    gap: 8px;
-
-    margin-bottom: 28px;
+    gap: 5px;
+    margin-bottom: 8px;
 }
-
 
 .mode-btn {
-    min-width: 125px;
-
-    padding: 10px 20px;
+    min-width: 95px;
+    padding: 6px 12px;
 
     border: 1px solid #d3dae1;
+    border-radius: 6px;
 
-    border-radius: 8px;
-
-    background: #ffffff;
-
+    background: #fff;
     color: #53616f;
 
-    cursor: pointer;
-
-    font-size: 13px;
-
+    font-family: inherit;
+    font-size: 11px;
     font-weight: 650;
 
-    transition:
-        background 0.15s ease,
-        color 0.15s ease,
-        border-color 0.15s ease,
-        box-shadow 0.15s ease,
-        transform 0.15s ease;
+    cursor: pointer;
 }
-
 
 .mode-btn:hover {
     background: #f2f5f7;
-
-    color: #17212b;
-
-    border-color: #c3ccd4;
 }
-
-
-.mode-btn:active {
-    transform: translateY(1px);
-}
-
-
-/* ============================================================
-   SELECTED MODE
-   ============================================================ */
 
 .mode-btn.active {
     background: #17212b;
-
-    color: #ffffff;
-
-    border-color: #17212b;
-
-    box-shadow:
-        0 3px 8px rgba(
-            20,
-            30,
-            40,
-            0.16
-        );
-}
-
-
-.mode-btn.active:hover {
-    background: #17212b;
-
-    color: #ffffff;
-
+    color: #fff;
     border-color: #17212b;
 }
 
 
 /* ============================================================
-   GENERAL CARD
+   CARD
    ============================================================ */
 
 .card {
-    padding: 30px;
+    padding: 12px;
 
+    background: #fff;
     border: 1px solid #dfe5ea;
-
-    border-radius: 16px;
-
-    background: #ffffff;
-
-    box-shadow:
-        0 5px 20px rgba(
-            23,
-            33,
-            43,
-            0.04
-        );
+    border-radius: 11px;
 }
 
 
@@ -340,65 +179,53 @@ body {
    ============================================================ */
 
 .section-head {
-    margin-bottom: 26px;
+    margin-bottom: 8px;
 }
 
-
 .section-head h2 {
-    margin: 0 0 6px;
-
-    color: #17212b;
-
-    font-size: 24px;
-
+    margin: 0 0 2px;
+    font-size: 17px;
+    line-height: 1.2;
     font-weight: 720;
 }
 
-
 .section-head .hint {
     margin: 0;
-
     color: #687887;
-
-    font-size: 14px;
+    font-size: 11px;
 }
 
 
 /* ============================================================
-   MAIN GRID
+   MAIN GENERATOR GRID
    ============================================================ */
 
 .grid {
     display: grid;
 
     grid-template-columns:
-        minmax(420px, 0.9fr)
-        minmax(500px, 1.1fr);
+        minmax(330px, .9fr)
+        minmax(420px, 1.1fr);
 
-    gap: 30px;
-
+    gap: 12px;
     align-items: start;
 }
 
 
 /* ============================================================
-   FORM PANEL
+   FORM
    ============================================================ */
 
 .form-panel {
     min-width: 0;
 }
 
-
 .form-panel label {
     display: block;
-
-    margin: 0 0 7px;
+    margin: 0 0 3px;
 
     color: #263746;
-
-    font-size: 13px;
-
+    font-size: 11px;
     font-weight: 650;
 }
 
@@ -414,9 +241,8 @@ body {
         minmax(0, 1fr)
         minmax(0, 1fr);
 
-    gap: 16px;
-
-    margin-bottom: 16px;
+    gap: 8px;
+    margin-bottom: 8px;
 }
 
 
@@ -430,171 +256,103 @@ textarea {
     width: 100%;
 
     border: 1px solid #d1d9e0;
+    border-radius: 6px;
 
-    border-radius: 8px;
-
-    background: #ffffff;
-
+    background: #fff;
     color: #17212b;
 
     font-family: inherit;
-
-    font-size: 14px;
+    font-size: 12px;
 
     outline: none;
-
-    transition:
-        border-color 0.15s ease,
-        box-shadow 0.15s ease;
 }
-
 
 input,
 select {
-    min-height: 44px;
-
-    padding: 0 13px;
+    height: 31px;
+    min-height: 31px;
+    padding: 0 9px;
 }
-
 
 textarea {
-    min-height: 90px;
-
-    padding: 12px 13px;
+    min-height: 48px;
+    padding: 7px 9px;
 
     resize: vertical;
-
-    margin-bottom: 16px;
+    margin-bottom: 8px;
 }
-
 
 input:focus,
 select:focus,
 textarea:focus {
     border-color: #6d7d8b;
-
-    box-shadow:
-        0 0 0 3px rgba(
-            23,
-            33,
-            43,
-            0.08
-        );
+    box-shadow: 0 0 0 2px rgba(23, 33, 43, .07);
 }
 
-
 input[type="file"] {
-    min-height: auto;
+    height: auto;
+    min-height: 30px;
+    padding: 4px;
 
-    padding: 9px;
-
-    margin-bottom: 18px;
-
+    margin-bottom: 8px;
     background: #fafbfc;
-
-    cursor: pointer;
 }
 
 
 /* ============================================================
-   ACTION BUTTONS
+   BUTTONS
    ============================================================ */
 
 .actions {
     display: flex;
-
     flex-wrap: wrap;
-
     align-items: center;
-
-    gap: 9px;
+    gap: 5px;
 }
-
 
 button,
 .file-btn {
-    border: 1px solid #17212b;
+    padding: 6px 10px;
 
-    border-radius: 8px;
+    border: 1px solid #17212b;
+    border-radius: 6px;
 
     background: #17212b;
-
-    color: #ffffff;
-
-    padding: 10px 16px;
+    color: #fff;
 
     font-family: inherit;
-
-    font-size: 13px;
-
+    font-size: 11px;
     font-weight: 650;
 
     cursor: pointer;
-
-    text-decoration: none;
-
-    transition:
-        background 0.15s ease,
-        border-color 0.15s ease,
-        box-shadow 0.15s ease,
-        transform 0.15s ease;
 }
-
 
 button:hover,
 .file-btn:hover {
     background: #293744;
-
-    border-color: #293744;
 }
-
-
-button:active,
-.file-btn:active {
-    transform: translateY(1px);
-}
-
 
 button:disabled {
-    opacity: 0.45;
-
+    opacity: .45;
     cursor: not-allowed;
-
-    box-shadow: none;
 }
-
 
 button.secondary,
 .file-btn.secondary {
     background: #f0f3f5;
-
     color: #273746;
-
     border-color: #d4dce2;
 }
-
 
 button.secondary:hover,
 .file-btn.secondary:hover {
     background: #e5eaee;
-
-    border-color: #c6d0d8;
 }
-
 
 button.ghost {
-    background: #ffffff;
-
+    background: #fff;
     color: #53616f;
-
     border-color: #d3dae1;
-}
-
-
-button.ghost:hover {
-    background: #f3f5f7;
-
-    color: #17212b;
 }
 
 
@@ -603,45 +361,38 @@ button.ghost:hover {
    ============================================================ */
 
 .status {
-    min-height: 20px;
-
-    margin-top: 10px;
+    min-height: 14px;
+    margin-top: 5px;
 
     color: #627282;
-
-    font-size: 13px;
+    font-size: 10px;
 }
 
 
 /* ============================================================
-   PREVIEW PANEL
+   PREVIEW
    ============================================================ */
 
 .preview-panel {
     min-width: 0;
 }
 
-
 .canvas-wrap {
     position: relative;
 
     display: flex;
-
     align-items: center;
-
     justify-content: center;
 
-    min-height: 440px;
-
     width: 100%;
+    min-height: 245px;
 
     overflow: hidden;
 
     border: 1px solid #dfe5ea;
+    border-radius: 8px;
 
-    border-radius: 12px;
-
-    background-color: #ffffff;
+    background-color: #fff;
 
     background-image:
         linear-gradient(
@@ -665,63 +416,50 @@ button.ghost:hover {
             #f1f4f6 75%
         );
 
-    background-size: 24px 24px;
+    background-size: 16px 16px;
 
     background-position:
         0 0,
-        0 12px,
-        12px -12px,
-        -12px 0;
+        0 8px,
+        8px -8px,
+        -8px 0;
 }
 
-
-#cardCanvas {
+#cardCanvas,
+#entityCardCanvas {
     display: block;
 
-    max-width: 94%;
-
-    max-height: 600px;
-
     width: auto;
-
     height: auto;
+
+    max-width: 88%;
+    max-height: 260px;
 
     object-fit: contain;
 }
-
 
 .empty-preview {
     position: absolute;
 
     top: 50%;
-
     left: 50%;
 
-    transform:
-        translate(
-            -50%,
-            -50%
-        );
+    transform: translate(-50%, -50%);
 
     color: #7b8995;
-
-    font-size: 14px;
+    font-size: 11px;
 
     pointer-events: none;
+    white-space: nowrap;
 }
-
-
-/* ============================================================
-   PREVIEW DOWNLOAD AREA
-   ============================================================ */
 
 .preview-panel > .actions {
-    margin-top: 12px;
+    margin-top: 6px;
 }
 
 
 /* ============================================================
-   BULK UPLOAD GRID
+   BULK UPLOAD
    ============================================================ */
 
 .upload-grid {
@@ -731,581 +469,320 @@ button.ghost:hover {
         minmax(0, 1fr)
         minmax(0, 1fr);
 
-    gap: 18px;
-
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 10px;
 }
 
-
 .upload-box {
-    padding: 20px;
+    padding: 10px;
 
     border: 1px dashed #cbd4dc;
-
-    border-radius: 12px;
+    border-radius: 8px;
 
     background: #fafbfc;
 }
 
-
 .upload-box strong {
     display: block;
-
-    margin-bottom: 7px;
-
-    color: #263746;
-
-    font-size: 14px;
+    margin-bottom: 3px;
+    font-size: 11px;
 }
-
 
 .upload-box .hint {
     display: block;
-
-    margin-bottom: 15px;
-
+    margin-bottom: 7px;
     color: #687887;
-
-    font-size: 13px;
+    font-size: 10px;
 }
 
 
 /* ============================================================
-   BATCH SUMMARY
+   BATCH
    ============================================================ */
 
 .batch-summary {
     display: flex;
-
     flex-wrap: wrap;
+    gap: 12px;
 
-    gap: 28px;
-
-    padding: 15px 18px;
-
-    margin-bottom: 14px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
 
     border: 1px solid #dfe5ea;
-
-    border-radius: 10px;
+    border-radius: 7px;
 
     background: #f8fafb;
-
     color: #53616f;
 
-    font-size: 13px;
+    font-size: 10px;
 }
-
 
 .batch-summary b {
-    margin-left: 4px;
-
     color: #17212b;
-
-    font-weight: 750;
 }
-
-
-/* ============================================================
-   ROW BETWEEN
-   ============================================================ */
 
 .row-between {
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
-
-    gap: 18px;
+    gap: 12px;
 }
-
 
 .batch-actions {
-    margin: 18px 0;
+    margin: 8px 0;
 }
-
 
 .batch-actions h3 {
     margin: 0;
-
-    color: #17212b;
-
-    font-size: 18px;
+    font-size: 14px;
 }
 
 
 /* ============================================================
-   BATCH TABLE CONTAINER
+   TABLE
    ============================================================ */
 
 .table-wrap {
     width: 100%;
-
     overflow-x: auto;
 
     border: 1px solid #dfe5ea;
-
-    border-radius: 10px;
-
-    background: #ffffff;
+    border-radius: 7px;
 }
-
-
-/* ============================================================
-   BATCH TABLE
-   ============================================================ */
 
 #batchTable {
     width: 100%;
-
-    min-width: 1100px;
+    min-width: 900px;
 
     border-collapse: collapse;
-
     table-layout: fixed;
-
-    background: #ffffff;
 }
 
-
-/* ============================================================
-   BATCH TABLE HEADER
-   ============================================================ */
-
 #batchTable thead th {
-    padding: 12px 13px;
-
-    border-bottom: 1px solid #dfe5ea;
+    padding: 6px 8px;
 
     background: #f6f8fa;
+    border-bottom: 1px solid #dfe5ea;
 
     color: #334554;
 
     text-align: left;
-
-    font-size: 12px;
-
+    font-size: 10px;
     font-weight: 700;
-
-    white-space: nowrap;
-
-    vertical-align: middle;
 }
-
-
-/* ============================================================
-   BATCH TABLE COLUMN WIDTHS
-   ============================================================ */
-
-#batchTable th:nth-child(1),
-#batchTable td:nth-child(1) {
-    width: 45px;
-}
-
-
-#batchTable th:nth-child(2),
-#batchTable td:nth-child(2) {
-    width: 150px;
-}
-
-
-#batchTable th:nth-child(3),
-#batchTable td:nth-child(3) {
-    width: 160px;
-}
-
-
-#batchTable th:nth-child(4),
-#batchTable td:nth-child(4) {
-    width: 105px;
-}
-
-
-#batchTable th:nth-child(5),
-#batchTable td:nth-child(5) {
-    width: 90px;
-}
-
-
-#batchTable th:nth-child(6),
-#batchTable td:nth-child(6) {
-    width: 120px;
-}
-
-
-#batchTable th:nth-child(7),
-#batchTable td:nth-child(7) {
-    width: 140px;
-}
-
-
-#batchTable th:nth-child(8),
-#batchTable td:nth-child(8) {
-    width: 250px;
-}
-
-
-/* ============================================================
-   BATCH TABLE ROW
-   ============================================================
-
-   Important:
-   The row must NOT be allowed to grow because of the
-   original photo dimensions.
-   ============================================================ */
 
 #batchTable tbody tr {
-    height: 112px;
-
+    height: 80px;
     border-bottom: 1px solid #edf0f2;
-
-    background: #ffffff;
 }
-
-
-#batchTable tbody tr:last-child {
-    border-bottom: 0;
-}
-
-
-#batchTable tbody tr:hover {
-    background: #fafbfc;
-}
-
-
-/* ============================================================
-   BATCH TABLE CELLS
-   ============================================================ */
 
 #batchTable tbody td {
-    height: 112px;
-
-    padding: 8px 13px;
-
-    border-bottom: 1px solid #edf0f2;
+    height: 80px;
+    padding: 5px 7px;
 
     color: #394b5a;
-
-    font-size: 13px;
-
-    line-height: 1.4;
+    font-size: 10px;
+    line-height: 1.3;
 
     vertical-align: middle;
-
     overflow: hidden;
-
     word-break: break-word;
 }
-
-
-/* ============================================================
-   RECORD NUMBER
-   ============================================================ */
-
-#batchTable td:first-child {
-    color: #53616f;
-
-    font-weight: 600;
-
-    text-align: left;
-}
-
-
-/* ============================================================
-   PHOTO CELL
-   ============================================================ */
-
-#batchTable td:nth-child(2) {
-    width: 150px;
-
-    padding: 8px 13px;
-
-    vertical-align: middle;
-
-    overflow: hidden;
-}
-
-
-/* ============================================================
-   PHOTO THUMBNAIL
-   ============================================================
-
-   Fixed dimensions prevent the original image from
-   controlling the table row height.
-   ============================================================ */
 
 #batchTable td:nth-child(2) img {
     display: block;
 
-    width: 80px;
-
-    height: 90px;
-
-    max-width: 80px;
-
-    max-height: 90px;
+    width: 55px;
+    height: 60px;
 
     object-fit: cover;
 
-    object-position: center;
-
     border: 1px solid #d9e0e6;
-
-    border-radius: 6px;
-
-    background: #f3f5f7;
+    border-radius: 4px;
 }
 
 
 /* ============================================================
-   PHOTO INFORMATION
+   DESKTOP
    ============================================================ */
 
-#batchTable td:nth-child(2) .photo-info {
-    display: block;
+@media (min-width: 1000px) {
 
-    width: 120px;
+    .container {
+        margin-top: 4px;
+        margin-bottom: 4px;
+        padding: 10px;
+    }
 
-    max-width: 120px;
+    .app-header {
+        margin-bottom: 6px;
+    }
 
-    margin-top: 4px;
+    .app-header h1 {
+        font-size: 22px;
+    }
 
-    overflow: hidden;
+    .category-tabs {
+        margin-bottom: 4px;
+    }
 
-    text-overflow: ellipsis;
+    .mode-tabs {
+        margin-bottom: 6px;
+    }
 
-    white-space: nowrap;
+    .card {
+        padding: 10px;
+    }
 
-    color: #687887;
+    .section-head {
+        margin-bottom: 6px;
+    }
 
-    font-size: 11px;
+    .section-head h2 {
+        font-size: 16px;
+    }
 
-    line-height: 1.3;
+    .grid {
+        gap: 10px;
+    }
+
+    input,
+    select {
+        height: 29px;
+        min-height: 29px;
+    }
+
+    textarea {
+        min-height: 42px;
+        margin-bottom: 6px;
+    }
+
+    .canvas-wrap {
+        min-height: 225px;
+    }
+
+    #cardCanvas,
+    #entityCardCanvas {
+        max-height: 240px;
+    }
 }
 
 
 /* ============================================================
-   MATCHED PHOTO STATUS
+   LARGE DESKTOP
    ============================================================ */
 
-#batchTable td:nth-child(2) .photo-matched,
-#batchTable td:nth-child(2) .matched {
-    color: #526879;
+@media (min-width: 1200px) {
 
-    font-size: 11px;
+    .container {
+        width: calc(100% - 16px);
+        padding: 9px;
+    }
+
+    .app-header h1 {
+        font-size: 21px;
+    }
+
+    .category-btn {
+        padding: 5px 13px;
+    }
+
+    .mode-btn {
+        padding: 5px 11px;
+    }
+
+    .card {
+        padding: 9px;
+    }
+
+    .canvas-wrap {
+        min-height: 210px;
+    }
+
+    #cardCanvas,
+    #entityCardCanvas {
+        max-height: 225px;
+    }
 }
 
 
 /* ============================================================
-   MISSING PHOTO
-   ============================================================
-
-   Any missing-photo status should appear clearly in RED.
-   Supports the common class names used for missing states.
+   MOBILE
    ============================================================ */
 
-#batchTable td:nth-child(2) .photo-missing,
-#batchTable td:nth-child(2) .missing-photo,
-#batchTable td:nth-child(2) .missing,
-#batchTable td:nth-child(2) .photo-info.missing,
-#batchTable td:nth-child(2) [class*="missing"] {
-    color: #d93025 !important;
+@media (max-width: 900px) {
 
-    font-weight: 650;
-}
+    .container {
+        width: calc(100% - 12px);
+        margin: 5px auto;
+        padding: 9px;
+    }
 
+    .app-header {
+        align-items: flex-start;
+    }
 
-/* ============================================================
-   MISSING PHOTO CELL
-
-   Keeps the missing state compact and aligned.
-   ============================================================ */
-
-#batchTable td:nth-child(2).photo-missing,
-#batchTable td:nth-child(2).missing-photo {
-    color: #d93025;
-
-    font-weight: 650;
-}
-
-
-/* ============================================================
-   MISSING PHOTO PLACEHOLDER
-
-   If the application renders a placeholder instead of
-   an image, keep the placeholder compact.
-   ============================================================ */
-
-#batchTable td:nth-child(2) .photo-placeholder {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    width: 80px;
-
-    height: 90px;
-
-    border: 1px dashed #e2a4a0;
-
-    border-radius: 6px;
-
-    background: #fff7f6;
-
-    color: #d93025;
-
-    font-size: 11px;
-
-    font-weight: 650;
-
-    text-align: center;
-}
-
-
-/* ============================================================
-   GENERAL CELL ALIGNMENT
-   ============================================================ */
-
-#batchTable td:nth-child(3),
-#batchTable td:nth-child(4),
-#batchTable td:nth-child(5),
-#batchTable td:nth-child(6),
-#batchTable td:nth-child(7) {
-    vertical-align: middle;
-}
-
-
-/* ============================================================
-   ADDRESS CELL
-   ============================================================ */
-
-#batchTable td:nth-child(8) {
-    white-space: normal;
-
-    line-height: 1.45;
-}
-
-
-/* ============================================================
-   EMPTY TABLE MESSAGE
-   ============================================================ */
-
-#batchTable .empty-cell {
-    height: auto;
-
-    padding: 30px;
-
-    color: #7a8792;
-
-    text-align: center;
-
-    background: #ffffff;
-}
-
-
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
-
-@media (max-width: 1050px) {
+    .app-header h1 {
+        font-size: 20px;
+    }
 
     .grid {
         grid-template-columns: 1fr;
+        gap: 10px;
     }
-
 
     .canvas-wrap {
-        min-height: 380px;
+        min-height: 210px;
     }
 
+    #cardCanvas,
+    #entityCardCanvas {
+        max-width: 94%;
+        max-height: 230px;
+    }
 }
 
 
-@media (max-width: 760px) {
+/* ============================================================
+   SMALL MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
 
     .container {
-        width: calc(100% - 20px);
-
-        margin: 10px auto 20px;
-
-        padding: 20px;
-
-        border-radius: 12px;
+        width: calc(100% - 8px);
+        padding: 8px;
     }
-
 
     .app-header {
         flex-direction: column;
-
-        margin-bottom: 22px;
+        gap: 5px;
     }
 
-
-    .app-header h1 {
-        font-size: 27px;
+    .test-badge {
+        align-self: flex-start;
     }
 
-
-    .category-tabs {
-        width: 100%;
-    }
-
-
-    .category-btn {
-        flex: 1;
-
-        min-width: 0;
-    }
-
-
+    .category-tabs,
     .mode-tabs {
         width: 100%;
     }
 
-
+    .category-btn,
     .mode-btn {
         flex: 1;
+        min-width: 0;
     }
-
-
-    .card {
-        padding: 20px;
-    }
-
 
     .two-col {
         grid-template-columns: 1fr;
-
-        gap: 0;
     }
-
 
     .upload-grid {
         grid-template-columns: 1fr;
     }
 
-
-    .row-between {
-        align-items: flex-start;
-
-        flex-direction: column;
+    .canvas-wrap {
+        min-height: 190px;
     }
-
-
-    .batch-actions .actions {
-        width: 100%;
-    }
-
-
-    .batch-actions .actions button {
-        flex: 1;
-    }
-
-
-    #batchTable {
-        min-width: 1100px;
-    }
-
 }
