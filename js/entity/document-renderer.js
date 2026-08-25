@@ -30,6 +30,7 @@
 // ============================================================
 
 const ENTITY_PAN_TEMPLATE =
+    window.PAN_TEMPLATE_BASE64 ||
     "templates/individual/id/PAN_Template.png";
 
 

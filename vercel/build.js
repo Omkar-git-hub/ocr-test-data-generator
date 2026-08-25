@@ -78,9 +78,10 @@ function loadBulkPhotos() {
             continue;
         }
 
-        const type = PHOTO_TYPES[
-            path.extname(name).toLowerCase()
-        ];
+        const type =
+            PHOTO_TYPES[
+                path.extname(name).toLowerCase()
+            ];
 
         if (type) {
             result[name] = dataUrl(file, type);
@@ -93,25 +94,36 @@ function loadBulkPhotos() {
 function loadJavaScript() {
     return JS_FILES
         .map(file => {
-            const source = read(
+            let source = read(
                 path.join(ROOT, file)
             );
 
+            // Vercel cannot serve local template paths from
+            // inside the generated single-file application.
+            if (
+                file ===
+                "js/entity/document-renderer.js"
+            ) {
+                source = source.replace(
+                    /["']templates\/individual\/id\/PAN_Template\.png["']/g,
+                    "window.PAN_TEMPLATE_BASE64"
+                );
+            }
+
             return `
 // VERCEL BUILD: ${file}
-${source}`;
+${source}
+`;
         })
         .join("\n");
 }
 
 function removeLocalAssets(html) {
-    // Supports single-line and multiline CSS <link> tags.
     html = html.replace(
-        /<link\s+[^>]*href=["']css\/style\.css["'][^>]*>/gi,
+        /<link\s+[^>]*href=["'](?:\.\/)?css\/style\.css["'][^>]*>/gi,
         ""
     );
 
-    // Supports nested JS paths and multiline script tags.
     for (const file of JS_FILES) {
         const escaped = file.replace(
             /[.*+?^${}()|[\]\\]/g,
@@ -120,7 +132,7 @@ function removeLocalAssets(html) {
 
         html = html.replace(
             new RegExp(
-                `<script\\s+[^>]*src=["']${escaped}["'][^>]*>\\s*<\\/script>`,
+                `<script\\s+[^>]*src=["'](?:\\.\\/)?${escaped}["'][^>]*>\\s*<\\/script>`,
                 "gi"
             ),
             ""
@@ -135,12 +147,18 @@ function createDeploymentHtml() {
     const css = read(CSS);
 
     const panTemplate = dataUrl(
-        path.join(TEMPLATE, "PAN_Template.png"),
+        path.join(
+            TEMPLATE,
+            "PAN_Template.png"
+        ),
         "image/png"
     );
 
     const aadhaarTemplate = dataUrl(
-        path.join(TEMPLATE, "AADHAR_Template.png"),
+        path.join(
+            TEMPLATE,
+            "AADHAR_Template.png"
+        ),
         "image/png"
     );
 
@@ -179,12 +197,14 @@ window.BULK_PHOTOS =
 
 window.BULK_PHOTO_COUNT =
     ${Object.keys(bulkPhotos).length};
-</script>`;
+</script>
+`;
 
     const javascript = `
 <script>
 ${loadJavaScript()}
-</script>`;
+</script>
+`;
 
     return html.replace(
         /<\/body>/i,
@@ -221,7 +241,9 @@ function build() {
     );
 
     const photoCount =
-        Object.keys(loadBulkPhotos()).length;
+        Object.keys(
+            loadBulkPhotos()
+        ).length;
 
     console.log("✓ Generated dist/index.html");
     console.log("✓ PAN template loaded");
