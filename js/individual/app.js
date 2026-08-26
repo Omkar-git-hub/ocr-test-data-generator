@@ -1336,259 +1336,252 @@ document.addEventListener(
         // EXCEL PROCESSING
         // ====================================================
 
-        excelUpload.onchange =
-            event => {
-
-                const file =
-                    event.target.files[0];
 
 
-                if (!file) {
+// ====================================================
+// EXCEL SCHEMAS
+// ====================================================
 
-                    return;
-                }
-
-
-                excelFileName.textContent =
-                    file.name;
-
-
-                batchStatus.textContent =
-                    "Reading Excel...";
-
-
-                const reader =
-                    new FileReader();
-
-
-                reader.onload =
-                    event => {
-
-                        try {
-
-                            const workbook =
-                                XLSX.read(
-                                    new Uint8Array(
-                                        event.target.result
-                                    ),
-                                    {
-                                        type:
-                                            "array"
-                                    }
-                                );
+const EXCEL_SCHEMAS = {
+    individual: {
+        sheet: "Template",
+        columns: [
+            "Name",
+            "DOB",
+            "Gender",
+            "Address",
+            "ParentName",
+            "Photo",
+            "PAN",
+            "Aadhaar"
+        ]
+    }
+};
 
 
-                            const worksheet =
-                                workbook.Sheets[
-                                    workbook.SheetNames[0]
-                                ];
+// ====================================================
+// GENERIC EXCEL VALIDATOR
+// ====================================================
+
+function validateExcel(workbook, schema) {
+    const sheets = workbook.SheetNames || [];
+
+    if (sheets.length !== 1 || sheets[0] !== schema.sheet) {
+        throw new Error(
+            `Invalid Excel template. Use the provided sample Excel with a "${schema.sheet}" sheet.`
+        );
+    }
+
+    const sheet = workbook.Sheets[schema.sheet];
+
+    const matrix = XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        defval: "",
+        blankrows: false
+    });
+
+    const headers = (matrix[0] || []).map(
+        value => String(value ?? "").trim()
+    );
+
+    if (
+        headers.length !== schema.columns.length ||
+        headers.some(
+            (value, index) =>
+                value !== schema.columns[index]
+        )
+    ) {
+        throw new Error(
+            `Invalid Excel template. Required columns: ${schema.columns.join(", ")}.`
+        );
+    }
+
+    if (
+        !matrix
+            .slice(1)
+            .some(row =>
+                row.some(
+                    value =>
+                        String(value ?? "").trim() !== ""
+                )
+            )
+    ) {
+        throw new Error(
+            "Excel template must contain at least one data row."
+        );
+    }
+
+    return sheet;
+}
 
 
-                            const rows =
-                                XLSX.utils.sheet_to_json(
-                                    worksheet,
-                                    {
-                                        defval:
-                                            ""
-                                    }
-                                );
+// ====================================================
+// EXCEL UPLOAD
+// ====================================================
 
+excelUpload.onchange = event => {
+    const file = event.target.files[0];
 
-                            if (
-                                !rows.length
-                            ) {
+    if (!file) return;
 
-                                batchStatus.textContent =
-                                    "Excel file is empty.";
+    excelFileName.textContent = file.name;
+    batchStatus.textContent =
+        "Reading and validating Excel...";
 
-                                return;
-                            }
+    parsedRecords = [];
+    renderBatchTable();
+    updateSummary();
+    setBatchButtons();
 
+    const reader = new FileReader();
 
-                            parsedRecords =
-                                rows.map(
-                                    (
-                                        row,
-                                        index
-                                    ) => {
+    reader.onload = event => {
+        try {
+            const workbook = XLSX.read(
+                new Uint8Array(event.target.result),
+                { type: "array" }
+            );
 
-                                        const name =
-                                            String(
-                                                valueFromRow(
-                                                    row,
-                                                    [
-                                                        "Name",
-                                                        "NAME",
-                                                        "name"
-                                                    ]
-                                                ) ||
-                                                generateRandomName()
-                                            )
-                                                .trim()
-                                                .toUpperCase();
+            const sheet = validateExcel(
+                workbook,
+                EXCEL_SCHEMAS.individual
+            );
 
+            const rows = XLSX.utils.sheet_to_json(
+                sheet,
+                { defval: "" }
+            );
 
-                                        const photo =
-                                            String(
-                                                valueFromRow(
-                                                    row,
-                                                    [
-                                                        "Photo",
-                                                        "PHOTO",
-                                                        "photo"
-                                                    ]
-                                                )
-                                            ).trim();
+            parsedRecords = rows.map(
+                (row, index) => {
+                    const name = String(
+                        valueFromRow(row, ["Name"]) ||
+                        generateRandomName()
+                    ).trim().toUpperCase();
 
+                    const photo = String(
+                        valueFromRow(row, ["Photo"]) || ""
+                    ).trim();
 
-                                        const photoMatch =
-                                            findBulkPhoto(
-                                                photo,
-                                                name
-                                            );
+                    const photoMatch =
+                        findBulkPhoto(photo, name);
 
+                    const pan = String(
+                        valueFromRow(row, ["PAN"]) || ""
+                    ).trim();
 
-                                        const pan =
-                                            String(
-                                                valueFromRow(
-                                                    row,
-                                                    [
-                                                        "PAN",
-                                                        "Pan",
-                                                        "pan"
-                                                    ]
-                                                )
-                                            ).trim();
+                    const aadhaar = String(
+                        valueFromRow(
+                            row,
+                            ["Aadhaar"]
+                        ) || ""
+                    ).trim();
 
+                    return {
+                        rowNumber: index + 2,
 
-                                        const aadhaar =
-                                            String(
-                                                valueFromRow(
-                                                    row,
-                                                    [
-                                                        "Aadhaar",
-                                                        "AADHAAR",
-                                                        "Aadhar",
-                                                        "AADHAR",
-                                                        "aadhaar"
-                                                    ]
-                                                )
-                                            ).trim();
+                        name,
 
+                        dob:
+                            normalizeDate(
+                                valueFromRow(
+                                    row,
+                                    ["DOB"]
+                                ) ||
+                                generateRandomDOB()
+                            ),
 
-                                        return {
+                        gender:
+                            String(
+                                valueFromRow(
+                                    row,
+                                    ["Gender"]
+                                ) ||
+                                generateRandomGender()
+                            ).trim(),
 
-                                            rowNumber:
-                                                index + 2,
+                        address:
+                            String(
+                                valueFromRow(
+                                    row,
+                                    ["Address"]
+                                ) ||
+                                generateRandomAddress()
+                            ).trim(),
 
-                                            name,
+                        parentName:
+                            String(
+                                valueFromRow(
+                                    row,
+                                    ["ParentName"]
+                                ) ||
+                                generateRandomFatherName()
+                            )
+                                .trim()
+                                .toUpperCase(),
 
-                                            dob:
-                                                normalizeDate(
-                                                    valueFromRow(
-                                                        row,
-                                                        [
-                                                            "DOB",
-                                                            "dob"
-                                                        ]
-                                                    ) ||
-                                                    generateRandomDOB()
-                                                ),
+                        pan:
+                            pan ||
+                            generatePANNumber(),
 
-                                            gender:
-                                                String(
-                                                    valueFromRow(
-                                                        row,
-                                                        [
-                                                            "Gender",
-                                                            "GENDER",
-                                                            "gender"
-                                                        ]
-                                                    ) ||
-                                                    generateRandomGender()
-                                                ).trim(),
+                        aadhaar:
+                            aadhaar ||
+                            generateAadharNumber(),
 
-                                            address:
-                                                String(
-                                                    valueFromRow(
-                                                        row,
-                                                        [
-                                                            "Address",
-                                                            "ADDRESS",
-                                                            "address"
-                                                        ]
-                                                    ) ||
-                                                    generateRandomAddress()
-                                                ).trim(),
+                        photo,
 
-                                            parentName:
-                                                String(
-                                                    valueFromRow(
-                                                        row,
-                                                        [
-                                                            "ParentName",
-                                                            "PARENTNAME",
-                                                            "FatherName",
-                                                            "Father's Name"
-                                                        ]
-                                                    ) ||
-                                                    generateRandomFatherName()
-                                                )
-                                                    .trim()
-                                                    .toUpperCase(),
+                        photoDataUrl:
+                            photoMatch.dataUrl,
 
-                                            pan:
-                                                pan ||
-                                                generatePANNumber(),
+                        photoFilename:
+                            photoMatch.filename,
 
-                                            aadhaar:
-                                                aadhaar ||
-                                                generateAadharNumber(),
-
-                                            photo,
-
-                                            photoDataUrl:
-                                                photoMatch.dataUrl,
-
-                                            photoFilename:
-                                                photoMatch.filename,
-
-                                            photoMatchReason:
-                                                photoMatch.reason
-                                        };
-                                    }
-                                );
-
-
-                            renderBatchTable();
-
-                            updateSummary();
-
-                            setBatchButtons();
-
-
-                            batchStatus.textContent =
-                                `Parsed ` +
-                                `${parsedRecords.length} ` +
-                                `record(s).`;
-
-                        } catch (error) {
-
-                            console.error(
-                                error
-                            );
-
-
-                            batchStatus.textContent =
-                                "Could not parse Excel.";
-                        }
+                        photoMatchReason:
+                            photoMatch.reason
                     };
+                }
+            );
 
+            renderBatchTable();
+            updateSummary();
+            setBatchButtons();
 
-                reader.readAsArrayBuffer(
-                    file
-                );
-            };
+            batchStatus.textContent =
+                `Excel validated successfully. Parsed ${parsedRecords.length} record(s).`;
+
+        } catch (error) {
+            console.error(
+                "Excel validation failed:",
+                error
+            );
+
+            parsedRecords = [];
+
+            renderBatchTable();
+            updateSummary();
+            setBatchButtons();
+
+            batchStatus.textContent =
+                error.message ||
+                "Invalid Excel template.";
+        }
+    };
+
+    reader.onerror = () => {
+        parsedRecords = [];
+
+        renderBatchTable();
+        updateSummary();
+        setBatchButtons();
+
+        batchStatus.textContent =
+            "Could not read the Excel file.";
+    };
+
+    reader.readAsArrayBuffer(file);
+};
+
+        
 
 
         // ====================================================
