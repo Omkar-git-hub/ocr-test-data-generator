@@ -1,4 +1,4 @@
-# D Card Generator
+# ID Card Generator
 
 Synthetic PAN and Aadhaar-style test-document generator for OCR and automation testing.
 
