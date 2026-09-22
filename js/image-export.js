@@ -52,7 +52,7 @@ const IMAGE_EXPORT_CONFIG = {
 
     maxQuality: 0.88,
 
-    minQuality: 0.35,
+    minQuality: 0.30,
 
     qualityStep: 0.03,
 
@@ -66,7 +66,7 @@ const IMAGE_EXPORT_CONFIG = {
 
     scaleStep: 0.90,
 
-    minScale: 0.60
+    minScale: 0.50
 };
 
 

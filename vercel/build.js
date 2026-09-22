@@ -154,13 +154,31 @@ function createDeploymentHtml() {
         "image/png"
     );
 
-    const aadhaarTemplate = dataUrl(
+    const aadhaarFrontTemplate = dataUrl(
         path.join(
             TEMPLATE,
             "AADHAR_Template.png"
         ),
         "image/png"
     );
+
+    const aadhaarBackTemplate = fs.existsSync(
+        path.join(TEMPLATE, "AADHAR_Back_Template.png")
+    )
+        ? dataUrl(
+            path.join(TEMPLATE, "AADHAR_Back_Template.png"),
+            "image/png"
+        )
+        : "";
+
+    const aadhaarBothTemplate = fs.existsSync(
+        path.join(TEMPLATE, "AADHAR_Both_Template.png")
+    )
+        ? dataUrl(
+            path.join(TEMPLATE, "AADHAR_Both_Template.png"),
+            "image/png"
+        )
+        : "";
 
     const excelTemplate = base64(
         path.join(
@@ -186,8 +204,17 @@ ${css}
 window.PAN_TEMPLATE_BASE64 =
     ${JSON.stringify(panTemplate)};
 
+window.AADHAAR_FRONT_TEMPLATE_BASE64 =
+    ${JSON.stringify(aadhaarFrontTemplate)};
+
 window.AADHAAR_TEMPLATE_BASE64 =
-    ${JSON.stringify(aadhaarTemplate)};
+    ${JSON.stringify(aadhaarFrontTemplate)};
+
+window.AADHAAR_BACK_TEMPLATE_BASE64 =
+    ${JSON.stringify(aadhaarBackTemplate)};
+
+window.AADHAAR_BOTH_TEMPLATE_BASE64 =
+    ${JSON.stringify(aadhaarBothTemplate)};
 
 window.OCR_TEMPLATE_BASE64 =
     ${JSON.stringify(excelTemplate)};
