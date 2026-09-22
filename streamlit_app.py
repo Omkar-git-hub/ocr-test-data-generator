@@ -225,13 +225,25 @@ PAN_TEMPLATE = (
     / "PAN_Template.png"
 )
 
+
+# ------------------------------------------------------------
+# Aadhaar Front
+#
+# OLD:
+#     AADHAR_Template.png
+#
+# NEW:
+#     AADHAR_Front_Template.png
+# ------------------------------------------------------------
+
 AADHAAR_FRONT_TEMPLATE = (
     BASE_DIR
     / "templates"
     / "individual"
     / "id"
-    / "AADHAR_Template.png"
+    / "AADHAR_Front_Template.png"
 )
+
 
 AADHAAR_BACK_TEMPLATE = (
     BASE_DIR
@@ -241,6 +253,7 @@ AADHAAR_BACK_TEMPLATE = (
     / "AADHAR_Back_Template.png"
 )
 
+
 AADHAAR_BOTH_TEMPLATE = (
     BASE_DIR
     / "templates"
@@ -249,8 +262,10 @@ AADHAAR_BOTH_TEMPLATE = (
     / "AADHAR_Both_Template.png"
 )
 
-AADHAAR_TEMPLATE = AADHAAR_FRONT_TEMPLATE
 
+# ============================================================
+# ENTITY TEMPLATE
+# ============================================================
 
 # Entity currently uses the shared PAN template.
 
@@ -266,6 +281,7 @@ PHOTO_DIR = (
     / "BulkUpload_photos"
 )
 
+
 SUPPORTED_IMAGE_EXTENSIONS = {
     ".jpg",
     ".jpeg",
@@ -273,6 +289,7 @@ SUPPORTED_IMAGE_EXTENSIONS = {
     ".webp",
     ".gif",
 }
+
 
 PHOTO_MIME_TYPES = {
     ".jpg": "image/jpeg",
@@ -291,12 +308,16 @@ required_files = [
     INDEX_FILE,
     CSS_FILE,
     TEMPLATE_EXCEL,
+
     PAN_TEMPLATE,
+
     AADHAAR_FRONT_TEMPLATE,
     AADHAAR_BACK_TEMPLATE,
     AADHAAR_BOTH_TEMPLATE,
+
     *JS_FILES,
 ]
+
 
 missing_files = [
     str(
@@ -360,22 +381,23 @@ pan_template_base64 = file_to_data_url(
     "image/png",
 )
 
+
 aadhaar_front_template_base64 = file_to_data_url(
     AADHAAR_FRONT_TEMPLATE,
     "image/png",
 )
+
 
 aadhaar_back_template_base64 = file_to_data_url(
     AADHAAR_BACK_TEMPLATE,
     "image/png",
 )
 
+
 aadhaar_both_template_base64 = file_to_data_url(
     AADHAAR_BOTH_TEMPLATE,
     "image/png",
 )
-
-aadhaar_template_base64 = aadhaar_front_template_base64
 
 
 # ============================================================
@@ -383,6 +405,7 @@ aadhaar_template_base64 = aadhaar_front_template_base64
 # ============================================================
 
 bulk_photos = {}
+
 
 for photo_file in sorted(
     PHOTO_DIR.iterdir()
@@ -501,6 +524,60 @@ for js_file in JS_FILES:
         )
 
 
+    # --------------------------------------------------------
+    # INDIVIDUAL AADHAAR TEMPLATES
+    #
+    # Replace relative paths with runtime Base64 templates.
+    # --------------------------------------------------------
+
+    if (
+        relative_name
+        == "js/individual/document-renderer.js"
+    ):
+
+        # Aadhaar Front
+
+        source = re.sub(
+            r"""["']templates/individual/id/AADHAR_Front_Template\.png["']""",
+            "window.AADHAAR_FRONT_TEMPLATE_BASE64",
+            source,
+        )
+
+
+        # Aadhaar Back
+
+        source = re.sub(
+            r"""["']templates/individual/id/AADHAR_Back_Template\.png["']""",
+            "window.AADHAAR_BACK_TEMPLATE_BASE64",
+            source,
+        )
+
+
+        # Aadhaar Both
+
+        source = re.sub(
+            r"""["']templates/individual/id/AADHAR_Both_Template\.png["']""",
+            "window.AADHAAR_BOTH_TEMPLATE_BASE64",
+            source,
+        )
+
+
+        # ----------------------------------------------------
+        # OLD AADHAAR TEMPLATE PATH
+        #
+        # If any old reference still exists in JS,
+        # prevent browser from trying to load:
+        #
+        # AADHAR_Template.png
+        # ----------------------------------------------------
+
+        source = re.sub(
+            r"""["']templates/individual/id/AADHAR_Template\.png["']""",
+            "window.AADHAAR_FRONT_TEMPLATE_BASE64",
+            source,
+        )
+
+
     javascript_parts.append(
         f"""
 // ============================================================
@@ -539,23 +616,26 @@ runtime_data = f"""
 window.OCR_TEMPLATE_BASE64 =
     {json.dumps(excel_template_base64)};
 
+
 window.PAN_TEMPLATE_BASE64 =
     {json.dumps(pan_template_base64)};
+
 
 window.AADHAAR_FRONT_TEMPLATE_BASE64 =
     {json.dumps(aadhaar_front_template_base64)};
 
-window.AADHAAR_TEMPLATE_BASE64 =
-    {json.dumps(aadhaar_template_base64)};
 
 window.AADHAAR_BACK_TEMPLATE_BASE64 =
     {json.dumps(aadhaar_back_template_base64)};
 
+
 window.AADHAAR_BOTH_TEMPLATE_BASE64 =
     {json.dumps(aadhaar_both_template_base64)};
 
+
 window.BULK_PHOTOS =
     {json.dumps(bulk_photos)};
+
 
 window.BULK_PHOTO_COUNT =
     {len(bulk_photos)};
@@ -618,15 +698,18 @@ final_html = f"""
 
     <meta charset="UTF-8">
 
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
 
+
     <meta
         name="color-scheme"
         content="light"
     >
+
 
     <title>
         Test Data Generator
@@ -698,6 +781,7 @@ final_html = f"""
         document.documentElement.style.overflowY =
             "visible";
 
+
         document.body.style.overflowY =
             "visible";
 
@@ -712,7 +796,7 @@ final_html = f"""
 # ============================================================
 # RENDER APPLICATION
 #
-# Manual screens are now compact.
+# Manual screens are compact.
 #
 # scrolling=False means there is no second scrollbar inside
 # the Streamlit iframe.
