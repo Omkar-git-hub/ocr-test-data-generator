@@ -1,5 +1,5 @@
 // ============================================================
-// FILE: js/document-renderer.js
+// FILE: js/individual/document-renderer.js
 //
 // PURPOSE:
 //     Render synthetic OCR test documents using PNG templates.
@@ -8,16 +8,19 @@
 //     PAN
 //     Aadhaar Front
 //     Aadhaar Back
-//     Aadhaar Front + Back
+//     Aadhaar Front + Back (Both)
 //
 // IMPORTANT:
 //     Front and Back templates are completely separate.
-//     BOTH uses the actual vertical combined template.
+//     Aadhaar Both uses the vertical combined PNG template
+//     (Front on top, Back below).
 // ============================================================
 
 
 // ============================================================
-// PAN TEMPLATE
+// PAN TEMPLATE CONFIGURATION
+//
+// Actual template: 500 x 310
 // ============================================================
 
 const PAN_TEMPLATE_CONFIG = {
@@ -71,12 +74,9 @@ const PAN_TEMPLATE_CONFIG = {
 
 
 // ============================================================
-// AADHAAR FRONT TEMPLATE
+// AADHAAR FRONT TEMPLATE CONFIGURATION
 //
-// Coordinates are based on the actual Front_Adhaar.png
-//
-// Actual template:
-//     1393 x 755
+// Actual template: 1393 x 755
 // ============================================================
 
 const AADHAAR_FRONT_TEMPLATE_CONFIG = {
@@ -122,12 +122,9 @@ const AADHAAR_FRONT_TEMPLATE_CONFIG = {
 
 
 // ============================================================
-// AADHAAR BACK TEMPLATE
+// AADHAAR BACK TEMPLATE CONFIGURATION
 //
-// Coordinates are based on actual Back_Adhaar.png
-//
-// Actual template:
-//     1415 x 707
+// Actual template: 1415 x 707
 // ============================================================
 
 const AADHAAR_BACK_TEMPLATE_CONFIG = {
@@ -136,7 +133,6 @@ const AADHAAR_BACK_TEMPLATE_CONFIG = {
         width: 1415,
         height: 707
     },
-
 
     address: {
         x: 365,
@@ -148,28 +144,15 @@ const AADHAAR_BACK_TEMPLATE_CONFIG = {
         color: "#17202a"
     }
 
-
-
 };
 
 
 // ============================================================
-// AADHAAR BOTH TEMPLATE
+// AADHAAR BOTH TEMPLATE CONFIGURATION
 //
-// Actual combined template:
-//
-//     Width  = 1466
-//     Height = 1550
-//
-// Front and Back are VERTICAL.
-//
-// Front starts:
-//     Y = 0
-//
-// Back starts around:
-//     Y = 775
-//
-// We use ABSOLUTE coordinates from the actual combined PNG.
+// Actual vertical combined template: 1466 x 1550
+// Front on top (offset: x=36, y=38)
+// Back below   (offset: x=14, y=804)
 // ============================================================
 
 const AADHAAR_BOTH_TEMPLATE_CONFIG = {
@@ -179,56 +162,56 @@ const AADHAAR_BOTH_TEMPLATE_CONFIG = {
         height: 1550
     },
 
-
     front: {
+        offsetX: 36,
+        offsetY: 38,
 
         photo: {
-            x: 351,
-            y: 259,
+            x: 315,
+            y: 221,
             width: 216,
             height: 264
         },
 
         name: {
-            x: 590,
-            y: 331,
+            x: 555,
+            y: 291,
             maxWidth: 395,
             font: "bold 27px Arial",
             color: "#17202a"
         },
 
         dob: {
-            x: 785,
-            y: 393,
+            x: 755,
+            y: 349,
             maxWidth: 285,
             font: "bold 25px Arial",
             color: "#17202a"
         },
 
         aadhaar: {
-            x: 811,
+            x: 774,
             y: 505,
             maxWidth: 420,
             font: "bold 30px Arial",
             color: "#17202a",
             align: "center"
         }
-
     },
 
-
     back: {
+        offsetX: 14,
+        offsetY: 804,
 
         address: {
-            x: 380,
-            y: 1120,
-            maxWidth: 420,
-            maxLines: 4,
-            lineHeight: 36,
+            x: 365,
+            y: 325,
+            maxWidth: 430,
+            maxLines: 3,
+            lineHeight: 38,
             font: "bold 24px Arial",
             color: "#17202a"
         }
-
     }
 
 };
@@ -248,49 +231,32 @@ const TEMPLATE_IMAGE_CACHE = {};
 function getAadhaarTemplate(type) {
 
     if (type === "Aadhaar_Back") {
-
         return {
-
             dataUrl:
                 window.AADHAAR_BACK_TEMPLATE_BASE64 ||
-
                 "templates/individual/id/AADHAR_Back_Template.png",
-
             config:
                 AADHAAR_BACK_TEMPLATE_CONFIG
-
         };
-
     }
-
 
     if (type === "Aadhaar_Both") {
-
         return {
-
             dataUrl:
                 window.AADHAAR_BOTH_TEMPLATE_BASE64 ||
-
                 "templates/individual/id/AADHAR_Both_Template.png",
-
             config:
                 AADHAAR_BOTH_TEMPLATE_CONFIG
-
         };
-
     }
 
-
     return {
-
         dataUrl:
             window.AADHAAR_FRONT_TEMPLATE_BASE64 ||
-
+            window.AADHAAR_TEMPLATE_BASE64 ||
             "templates/individual/id/AADHAR_Front_Template.png",
-
         config:
             AADHAAR_FRONT_TEMPLATE_CONFIG
-
     };
 
 }
@@ -310,109 +276,65 @@ async function drawSyntheticDocument(
     const documentType =
         normalizeDocumentType(type);
 
-
     let config;
     let templateDataUrl;
-
 
     // ========================================================
     // PAN
     // ========================================================
 
     if (documentType === "PAN") {
-
         config =
             PAN_TEMPLATE_CONFIG;
-
-
         templateDataUrl =
             window.PAN_TEMPLATE_BASE64 ||
-
             "templates/individual/id/PAN_Template.png";
-
     }
-
 
     // ========================================================
     // AADHAAR FRONT
     // ========================================================
 
-    else if (
-        documentType === "Aadhaar_Front"
-    ) {
-
+    else if (documentType === "Aadhaar_Front") {
         const template =
-            getAadhaarTemplate(
-                "Aadhaar_Front"
-            );
-
-
+            getAadhaarTemplate("Aadhaar_Front");
         config =
             template.config;
-
-
         templateDataUrl =
             template.dataUrl;
-
     }
-
 
     // ========================================================
     // AADHAAR BACK
     // ========================================================
 
-    else if (
-        documentType === "Aadhaar_Back"
-    ) {
-
+    else if (documentType === "Aadhaar_Back") {
         const template =
-            getAadhaarTemplate(
-                "Aadhaar_Back"
-            );
-
-
+            getAadhaarTemplate("Aadhaar_Back");
         config =
             template.config;
-
-
         templateDataUrl =
             template.dataUrl;
-
     }
-
 
     // ========================================================
     // AADHAAR BOTH
     // ========================================================
 
-    else if (
-        documentType === "Aadhaar_Both"
-    ) {
-
+    else if (documentType === "Aadhaar_Both") {
         const template =
-            getAadhaarTemplate(
-                "Aadhaar_Both"
-            );
-
-
+            getAadhaarTemplate("Aadhaar_Both");
         config =
             template.config;
-
-
         templateDataUrl =
             template.dataUrl;
-
     }
 
-
     else {
-
         throw new Error(
             `Unsupported document type: ${type}`
         );
-
     }
-
 
     // ========================================================
     // LOAD TEMPLATE
@@ -424,7 +346,6 @@ async function drawSyntheticDocument(
             templateDataUrl
         );
 
-
     // ========================================================
     // CANVAS
     // ========================================================
@@ -432,19 +353,16 @@ async function drawSyntheticDocument(
     const ctx =
         canvas.getContext("2d");
 
-
     canvas.width =
         template.naturalWidth ||
         config.canvas.width;
-
 
     canvas.height =
         template.naturalHeight ||
         config.canvas.height;
 
-
     // ========================================================
-    // CLEAR
+    // CLEAR & DRAW ORIGINAL TEMPLATE
     // ========================================================
 
     ctx.clearRect(
@@ -454,11 +372,6 @@ async function drawSyntheticDocument(
         canvas.height
     );
 
-
-    // ========================================================
-    // DRAW ORIGINAL TEMPLATE
-    // ========================================================
-
     ctx.drawImage(
         template,
         0,
@@ -467,87 +380,45 @@ async function drawSyntheticDocument(
         canvas.height
     );
 
-
     // ========================================================
-    // PAN
+    // DRAW DATA & PHOTO
     // ========================================================
 
-    if (
-        documentType === "PAN"
-    ) {
-
+    if (documentType === "PAN") {
         renderPanData(
             ctx,
             person || {},
             config
         );
-
-
         await drawTemplatePhoto(
             ctx,
             photoDataUrl,
             config.photo
         );
-
-    }
-
-
-    // ========================================================
-    // AADHAAR FRONT
-    // ========================================================
-
-    else if (
-        documentType === "Aadhaar_Front"
-    ) {
-
+    } else if (documentType === "Aadhaar_Front") {
         renderAadhaarFrontData(
             ctx,
             person || {},
             config
         );
-
-
         await drawTemplatePhoto(
             ctx,
             photoDataUrl,
             config.photo
         );
-
-    }
-
-
-    // ========================================================
-    // AADHAAR BACK
-    // ========================================================
-
-    else if (
-        documentType === "Aadhaar_Back"
-    ) {
-
+    } else if (documentType === "Aadhaar_Back") {
         renderAadhaarBackData(
             ctx,
             person || {},
             config
         );
-
-    }
-
-
-    // ========================================================
-    // AADHAAR BOTH
-    // ========================================================
-
-    else if (
-        documentType === "Aadhaar_Both"
-    ) {
-
-        renderAadhaarBothData(
+    } else if (documentType === "Aadhaar_Both") {
+        await renderAadhaarBothData(
             ctx,
             person || {},
             photoDataUrl,
             config
         );
-
     }
 
 }
@@ -560,46 +431,41 @@ async function drawSyntheticDocument(
 function normalizeDocumentType(type) {
 
     const value =
-        String(
-            type || "PAN"
-        ).trim()
+        String(type || "PAN")
+            .trim()
             .toLowerCase();
 
-
     if (value === "pan") {
-
         return "PAN";
-
     }
-
 
     if (
         value === "aadhaar" ||
-        value === "aadhaar_front"
+        value === "aadhaar_front" ||
+        value === "aadhaar front" ||
+        value === "aadhaar_front_cards"
     ) {
-
         return "Aadhaar_Front";
-
     }
 
-
     if (
-        value === "aadhaar_back"
+        value === "aadhaar_back" ||
+        value === "aadhaar back" ||
+        value === "aadhaar_back_cards"
     ) {
-
         return "Aadhaar_Back";
-
     }
-
 
     if (
-        value === "aadhaar_both"
+        value === "aadhaar_both" ||
+        value === "aadhaar both" ||
+        value === "aadhaar_front_back" ||
+        value === "aadhaar front + back" ||
+        value === "aadhaar_both_cards" ||
+        value === "aadhaar_both_test_cards"
     ) {
-
         return "Aadhaar_Both";
-
     }
-
 
     return type;
 
@@ -618,64 +484,78 @@ function loadTemplateImage(
     const cacheKey =
         `${type}:${dataUrl}`;
 
-
-    if (
-        TEMPLATE_IMAGE_CACHE[
-        cacheKey
-        ]
-    ) {
-
-        return Promise.resolve(
-            TEMPLATE_IMAGE_CACHE[
-            cacheKey
-            ]
-        );
-
+    if (TEMPLATE_IMAGE_CACHE[cacheKey]) {
+        return Promise.resolve(TEMPLATE_IMAGE_CACHE[cacheKey]);
     }
 
-
     return new Promise(
-        (
-            resolve,
-            reject
-        ) => {
+        (resolve, reject) => {
+            const image = new Image();
 
-            const image =
-                new Image();
+            image.onload = () => {
+                TEMPLATE_IMAGE_CACHE[cacheKey] = image;
+                resolve(image);
+            };
 
+            image.onerror = () => {
+                // If AADHAR_Front_Template.png failed, fallback to AADHAR_Template.png
+                if (typeof dataUrl === "string" && dataUrl.includes("AADHAR_Front_Template.png")) {
+                    const fallbackImg = new Image();
+                    const fallbackUrl = dataUrl.replace("AADHAR_Front_Template.png", "AADHAR_Template.png");
+                    fallbackImg.onload = () => {
+                        TEMPLATE_IMAGE_CACHE[cacheKey] = fallbackImg;
+                        resolve(fallbackImg);
+                    };
+                    fallbackImg.onerror = () => {
+                        reject(new Error(`Unable to load ${type} PNG template.`));
+                    };
+                    fallbackImg.src = fallbackUrl;
+                    return;
+                }
+                reject(
+                    new Error(
+                        `Unable to load ${type} PNG template.`
+                    )
+                );
+            };
 
-            image.onload =
-                () => {
-
-                    TEMPLATE_IMAGE_CACHE[
-                        cacheKey
-                    ] = image;
-
-
-                    resolve(
-                        image
-                    );
-
-                };
-
-
-            image.onerror =
-                () => {
-
-                    reject(
-                        new Error(
-                            `Unable to load ${type} PNG template.`
-                        )
-                    );
-
-                };
-
-
-            image.src =
-                dataUrl;
-
+            image.src = dataUrl;
         }
     );
+
+}
+
+
+// ============================================================
+// CREATE OFFSET CONFIG
+//
+// Shifts x/y coordinates by the specified offset.
+// Preserves all other properties (width, height, font, etc.)
+// ============================================================
+
+function createOffsetConfig(
+    config,
+    offsetX = 0,
+    offsetY = 0
+) {
+
+    if (!config) {
+        return {};
+    }
+
+    const result = {
+        ...config
+    };
+
+    if (typeof config.x === "number") {
+        result.x = config.x + offsetX;
+    }
+
+    if (typeof config.y === "number") {
+        result.y = config.y + offsetY;
+    }
+
+    return result;
 
 }
 
@@ -696,20 +576,17 @@ function renderPanData(
         config.pan
     );
 
-
     drawText(
         ctx,
         person.name,
         config.name
     );
 
-
     drawText(
         ctx,
         person.parentName,
         config.fatherName
     );
-
 
     drawText(
         ctx,
@@ -721,7 +598,7 @@ function renderPanData(
 
 
 // ============================================================
-// AADHAAR FRONT
+// AADHAAR FRONT DATA
 // ============================================================
 
 function renderAadhaarFrontData(
@@ -736,19 +613,16 @@ function renderAadhaarFrontData(
         config.name
     );
 
-
     drawText(
         ctx,
         person.dob,
         config.dob
     );
 
-
     const aadhaar =
         formatAadhaarNumber(
             person.aadhaar
         );
-
 
     drawCenteredText(
         ctx,
@@ -760,7 +634,7 @@ function renderAadhaarFrontData(
 
 
 // ============================================================
-// AADHAAR BACK
+// AADHAAR BACK DATA
 // ============================================================
 
 function renderAadhaarBackData(
@@ -779,7 +653,11 @@ function renderAadhaarBackData(
 
 
 // ============================================================
-// AADHAAR BOTH
+// AADHAAR BOTH DATA
+//
+// Uses vertical combined template:
+// Front side fields on top with front offset,
+// Back side address below with back offset.
 // ============================================================
 
 async function renderAadhaarBothData(
@@ -789,53 +667,96 @@ async function renderAadhaarBothData(
     config
 ) {
 
-    // --------------------------------------------------------
-    // FRONT
-    // --------------------------------------------------------
+    const templateConfig =
+        config ||
+        AADHAAR_BOTH_TEMPLATE_CONFIG;
 
+    // ========================================================
+    // FRONT
+    // ========================================================
+
+    const front =
+        templateConfig.front;
+
+    // NAME
     drawText(
         ctx,
         person.name,
-        config.front.name
+        createOffsetConfig(
+            front.name,
+            front.offsetX,
+            front.offsetY
+        )
     );
 
-
+    // DOB
     drawText(
         ctx,
         person.dob,
-        config.front.dob
+        createOffsetConfig(
+            front.dob,
+            front.offsetX,
+            front.offsetY
+        )
     );
 
-
+    // AADHAAR NUMBER - FRONT
     const aadhaar =
         formatAadhaarNumber(
             person.aadhaar
         );
 
-
     drawCenteredText(
         ctx,
         aadhaar,
-        config.front.aadhaar
+        createOffsetConfig(
+            front.aadhaar,
+            front.offsetX,
+            front.offsetY
+        )
     );
 
-
+    // PHOTO - FRONT
     await drawTemplatePhoto(
         ctx,
         photoDataUrl,
-        config.front.photo
+        createOffsetConfig(
+            front.photo,
+            front.offsetX,
+            front.offsetY
+        )
     );
 
-
-    // --------------------------------------------------------
+    // ========================================================
     // BACK
-    // --------------------------------------------------------
+    // ========================================================
 
+    const back =
+        templateConfig.back;
+
+    // ADDRESS - BACK
     drawMultilineText(
         ctx,
         person.address,
-        config.back.address
+        createOffsetConfig(
+            back.address,
+            back.offsetX,
+            back.offsetY
+        )
     );
+
+    // Optional back Aadhaar number if present in config
+    if (back.aadhaar) {
+        drawCenteredText(
+            ctx,
+            aadhaar,
+            createOffsetConfig(
+                back.aadhaar,
+                back.offsetX,
+                back.offsetY
+            )
+        );
+    }
 
 }
 
@@ -851,54 +772,31 @@ function drawText(
 ) {
 
     const text =
-        String(
-            value || ""
-        ).trim();
+        String(value || "").trim();
 
-
-    if (!text) {
-
+    if (!text || !config) {
         return;
-
     }
-
 
     ctx.save();
 
-
-    ctx.textAlign =
-        "left";
-
-
-    ctx.textBaseline =
-        "alphabetic";
-
-
-    ctx.fillStyle =
-        config.color ||
-        "#17202a";
-
-
-    ctx.font =
-        config.font ||
-        "14px Arial";
-
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = config.color || "#17202a";
+    ctx.font = config.font || "14px Arial";
 
     const fitted =
         fitTextToWidth(
             ctx,
             text,
-            config.maxWidth ||
-            1000
+            config.maxWidth || 1000
         );
-
 
     ctx.fillText(
         fitted,
         config.x,
         config.y
     );
-
 
     ctx.restore();
 
@@ -916,55 +814,31 @@ function drawCenteredText(
 ) {
 
     const text =
-        String(
-            value || ""
-        ).trim();
+        String(value || "").trim();
 
-
-    if (!text) {
-
+    if (!text || !config) {
         return;
-
     }
-
 
     ctx.save();
 
-
-    ctx.textAlign =
-        config.align ||
-        "center";
-
-
-    ctx.textBaseline =
-        "alphabetic";
-
-
-    ctx.fillStyle =
-        config.color ||
-        "#17202a";
-
-
-    ctx.font =
-        config.font ||
-        "14px Arial";
-
+    ctx.textAlign = config.align || "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = config.color || "#17202a";
+    ctx.font = config.font || "14px Arial";
 
     const fitted =
         fitTextToWidth(
             ctx,
             text,
-            config.maxWidth ||
-            1000
+            config.maxWidth || 1000
         );
-
 
     ctx.fillText(
         fitted,
         config.x,
         config.y
     );
-
 
     ctx.restore();
 
@@ -973,8 +847,6 @@ function drawCenteredText(
 
 // ============================================================
 // MULTILINE TEXT
-//
-// Used mainly for Aadhaar BACK address.
 // ============================================================
 
 function drawMultilineText(
@@ -986,7 +858,7 @@ function drawMultilineText(
     const text =
         String(value || "").trim();
 
-    if (!text) {
+    if (!text || !config) {
         return;
     }
 
@@ -994,109 +866,79 @@ function drawMultilineText(
 
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
-    ctx.fillStyle =
-        config.color || "#17202a";
+    ctx.fillStyle = config.color || "#17202a";
+    ctx.font = config.font || "14px Arial";
 
-    ctx.font =
-        config.font || "14px Arial";
+    const maxWidth =
+        config.maxWidth || 800;
+
+    const lineHeight =
+        config.lineHeight || 40;
+
+    const maxLines =
+        config.maxLines || 3;
 
     const words =
         text.split(/\s+/);
 
     const lines = [];
+    let currentLine = "";
 
-    let line = "";
+    words.forEach(
+        function (word) {
+            const testLine =
+                currentLine
+                    ? `${currentLine} ${word}`
+                    : word;
 
-    const maxWidth =
-        config.maxWidth || 400;
+            const width =
+                ctx.measureText(testLine).width;
 
-    const maxLines =
-        config.maxLines || 3;
-
-    for (const word of words) {
-
-        const testLine =
-            line
-                ? `${line} ${word}`
-                : word;
-
-        const width =
-            ctx.measureText(
-                testLine
-            ).width;
-
-        if (
-            width > maxWidth &&
-            line
-        ) {
-
-            lines.push(line);
-
-            line = word;
-
-        } else {
-
-            line = testLine;
-
+            if (width <= maxWidth) {
+                currentLine = testLine;
+            } else {
+                if (currentLine) {
+                    lines.push(currentLine);
+                }
+                currentLine = word;
+            }
         }
+    );
+
+    if (currentLine) {
+        lines.push(currentLine);
     }
 
-    if (line) {
-        lines.push(line);
-    }
-
-    // Keep address within configured number of lines
+    // Keep address within configured number of lines with ellipsis
     if (lines.length > maxLines) {
-
-        const visibleLines =
-            lines.slice(0, maxLines);
-
-        let remaining =
-            lines
-                .slice(maxLines - 1)
-                .join(" ");
-
-        let lastLine =
-            visibleLines[maxLines - 1];
-
+        const visibleLines = lines.slice(0, maxLines);
+        let lastLine = visibleLines[maxLines - 1];
         while (
-            ctx.measureText(
-                `${lastLine}...`
-            ).width > maxWidth &&
+            ctx.measureText(`${lastLine}...`).width > maxWidth &&
             lastLine.length > 1
         ) {
-
-            lastLine =
-                lastLine.slice(0, -1);
+            lastLine = lastLine.slice(0, -1);
         }
-
-        visibleLines[maxLines - 1] =
-            `${lastLine}...`;
-
+        visibleLines[maxLines - 1] = `${lastLine}...`;
         lines.length = 0;
-
-        visibleLines.forEach(
-            line => lines.push(line)
-        );
+        visibleLines.forEach(line => lines.push(line));
     }
 
-    const lineHeight =
-        config.lineHeight || 36;
+    const visibleLines =
+        lines.slice(0, maxLines);
 
-    lines.forEach(
-        (line, index) => {
-
+    visibleLines.forEach(
+        function (line, index) {
             ctx.fillText(
                 line,
                 config.x,
-                config.y +
-                index * lineHeight
+                config.y + (index * lineHeight)
             );
-
         }
     );
 
     ctx.restore();
+
 }
 
 
@@ -1111,37 +953,19 @@ function fitTextToWidth(
 ) {
 
     if (
-        ctx.measureText(
-            text
-        ).width <=
-        maxWidth
+        ctx.measureText(text).width <= maxWidth
     ) {
-
         return text;
-
     }
 
-
-    let result =
-        text;
-
+    let result = text;
 
     while (
         result.length > 1 &&
-        ctx.measureText(
-            `${result}...`
-        ).width >
-        maxWidth
+        ctx.measureText(`${result}...`).width > maxWidth
     ) {
-
-        result =
-            result.slice(
-                0,
-                -1
-            );
-
+        result = result.slice(0, -1);
     }
-
 
     return `${result}...`;
 
@@ -1161,135 +985,70 @@ function drawTemplatePhoto(
     return new Promise(
         resolve => {
 
-            if (!photoDataUrl) {
-
+            if (!photoDataUrl || !config) {
                 resolve();
-
                 return;
-
             }
 
+            const image = new Image();
 
-            const image =
-                new Image();
+            image.onload = () => {
 
+                ctx.save();
 
-            image.onload =
-                () => {
+                ctx.beginPath();
+                ctx.rect(
+                    config.x,
+                    config.y,
+                    config.width,
+                    config.height
+                );
+                ctx.clip();
 
-                    ctx.save();
+                const imageRatio =
+                    image.width / image.height;
 
+                const boxRatio =
+                    config.width / config.height;
 
-                    ctx.beginPath();
+                let drawWidth = config.width;
+                let drawHeight = config.height;
+                let drawX = config.x;
+                let drawY = config.y;
 
+                // Cover image: preserve aspect ratio
+                if (imageRatio > boxRatio) {
+                    drawHeight = config.height;
+                    drawWidth = drawHeight * imageRatio;
+                    drawX =
+                        config.x +
+                        (config.width - drawWidth) / 2;
+                } else {
+                    drawWidth = config.width;
+                    drawHeight = drawWidth / imageRatio;
+                    drawY =
+                        config.y +
+                        (config.height - drawHeight) / 2;
+                }
 
-                    ctx.rect(
-                        config.x,
-                        config.y,
-                        config.width,
-                        config.height
-                    );
+                ctx.drawImage(
+                    image,
+                    drawX,
+                    drawY,
+                    drawWidth,
+                    drawHeight
+                );
 
+                ctx.restore();
+                resolve();
 
-                    ctx.clip();
+            };
 
+            image.onerror = () => {
+                resolve();
+            };
 
-                    const imageRatio =
-                        image.width /
-                        image.height;
-
-
-                    const boxRatio =
-                        config.width /
-                        config.height;
-
-
-                    let drawWidth =
-                        config.width;
-
-
-                    let drawHeight =
-                        config.height;
-
-
-                    let drawX =
-                        config.x;
-
-
-                    let drawY =
-                        config.y;
-
-
-                    if (
-                        imageRatio >
-                        boxRatio
-                    ) {
-
-                        drawHeight =
-                            config.height;
-
-
-                        drawWidth =
-                            drawHeight *
-                            imageRatio;
-
-
-                        drawX =
-                            config.x +
-                            (
-                                config.width -
-                                drawWidth
-                            ) / 2;
-
-                    }
-                    else {
-
-                        drawWidth =
-                            config.width;
-
-
-                        drawHeight =
-                            drawWidth /
-                            imageRatio;
-
-
-                        drawY =
-                            config.y +
-                            (
-                                config.height -
-                                drawHeight
-                            ) / 2;
-
-                    }
-
-
-                    ctx.drawImage(
-                        image,
-                        drawX,
-                        drawY,
-                        drawWidth,
-                        drawHeight
-                    );
-
-
-                    ctx.restore();
-
-
-                    resolve();
-
-                };
-
-
-            image.onerror =
-                () => {
-
-                    resolve();
-
-                };
-
-
-            image.src =
-                photoDataUrl;
+            image.src = photoDataUrl;
 
         }
     );
@@ -1301,57 +1060,55 @@ function drawTemplatePhoto(
 // AADHAAR NUMBER FORMAT
 // ============================================================
 
-function formatAadhaarNumber(
-    value
-) {
+function formatAadhaarNumber(value) {
 
     const digits =
-        String(
-            value || ""
-        )
-            .replace(
-                /\D/g,
-                ""
-            )
-            .slice(
-                0,
-                12
-            );
-
+        String(value || "")
+            .replace(/\D/g, "")
+            .slice(0, 12);
 
     if (!digits) {
-
         return "";
-
     }
 
-
     return digits
-        .replace(
-            /(.{4})/g,
-            "$1 "
-        )
+        .replace(/(.{4})/g, "$1 ")
         .trim();
 
 }
 
 
 // ============================================================
-// EXPOSE CONFIG
+// EXPOSE CONFIG & FUNCTIONS
 // ============================================================
 
 window.OCR_TEMPLATE_CONFIG = {
-
-    PAN:
-        PAN_TEMPLATE_CONFIG,
-
-    AADHAAR_FRONT:
-        AADHAAR_FRONT_TEMPLATE_CONFIG,
-
-    AADHAAR_BACK:
-        AADHAAR_BACK_TEMPLATE_CONFIG,
-
-    AADHAAR_BOTH:
-        AADHAAR_BOTH_TEMPLATE_CONFIG
-
+    PAN: PAN_TEMPLATE_CONFIG,
+    AADHAAR_FRONT: AADHAAR_FRONT_TEMPLATE_CONFIG,
+    AADHAAR_BACK: AADHAAR_BACK_TEMPLATE_CONFIG,
+    AADHAAR_BOTH: AADHAAR_BOTH_TEMPLATE_CONFIG
 };
+
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = {
+        PAN_TEMPLATE_CONFIG,
+        AADHAAR_FRONT_TEMPLATE_CONFIG,
+        AADHAAR_BACK_TEMPLATE_CONFIG,
+        AADHAAR_BOTH_TEMPLATE_CONFIG,
+        getAadhaarTemplate,
+        drawSyntheticDocument,
+        normalizeDocumentType,
+        loadTemplateImage,
+        createOffsetConfig,
+        renderPanData,
+        renderAadhaarFrontData,
+        renderAadhaarBackData,
+        renderAadhaarBothData,
+        drawText,
+        drawCenteredText,
+        drawMultilineText,
+        fitTextToWidth,
+        drawTemplatePhoto,
+        formatAadhaarNumber
+    };
+}

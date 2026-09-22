@@ -237,6 +237,12 @@ document.addEventListener(
         const downloadAllAadhaar =
             $("downloadAllAadhaar");
 
+        const downloadAllAadhaarBack =
+            $("downloadAllAadhaarBack");
+
+        const downloadAllAadhaarBoth =
+            $("downloadAllAadhaarBoth");
+
         const downloadBothZip =
             $("downloadBothZip");
 
@@ -694,13 +700,18 @@ document.addEventListener(
         generateBtn.onclick =
             async () => {
 
-                if (
-                    !inputName.value.trim()
-                ) {
+                const isBackOnly =
+                    docTypeSelect.value === "Aadhaar_Back";
 
+                if (isBackOnly && !inputAddress.value.trim() && !inputName.value.trim()) {
+                    manualStatus.textContent =
+                        "Enter at least an address or name before generating.";
+                    return;
+                }
+
+                if (!isBackOnly && !inputName.value.trim()) {
                     manualStatus.textContent =
                         "Enter at least a name before generating.";
-
                     return;
                 }
 
@@ -834,16 +845,21 @@ document.addEventListener(
         ].forEach(
             element => {
 
-                element.addEventListener(
-                    "input",
-                    () => {
+                ["input", "change"].forEach(
+                    eventType => {
 
-                        if (
-                            hasGeneratedManual
-                        ) {
+                        element.addEventListener(
+                            eventType,
+                            () => {
 
-                            renderManual();
-                        }
+                                if (
+                                    hasGeneratedManual
+                                ) {
+
+                                    renderManual();
+                                }
+                            }
+                        );
                     }
                 );
             }
@@ -1868,16 +1884,34 @@ document.addEventListener(
                 parsedRecords.length === 0;
 
 
-            downloadAllPan.disabled =
-                disabled;
+            if (downloadAllPan) {
+                downloadAllPan.disabled =
+                    disabled;
+            }
 
 
-            downloadAllAadhaar.disabled =
-                disabled;
+            if (downloadAllAadhaar) {
+                downloadAllAadhaar.disabled =
+                    disabled;
+            }
 
 
-            downloadBothZip.disabled =
-                disabled;
+            if (downloadAllAadhaarBack) {
+                downloadAllAadhaarBack.disabled =
+                    disabled;
+            }
+
+
+            if (downloadAllAadhaarBoth) {
+                downloadAllAadhaarBoth.disabled =
+                    disabled;
+            }
+
+
+            if (downloadBothZip) {
+                downloadBothZip.disabled =
+                    disabled;
+            }
         }
 
 
@@ -2353,14 +2387,11 @@ document.addEventListener(
 
             try {
 
-                downloadAllPan.disabled =
-                    true;
-
-                downloadAllAadhaar.disabled =
-                    true;
-
-                downloadBothZip.disabled =
-                    true;
+                if (downloadAllPan) downloadAllPan.disabled = true;
+                if (downloadAllAadhaar) downloadAllAadhaar.disabled = true;
+                if (downloadAllAadhaarBack) downloadAllAadhaarBack.disabled = true;
+                if (downloadAllAadhaarBoth) downloadAllAadhaarBoth.disabled = true;
+                if (downloadBothZip) downloadBothZip.disabled = true;
 
 
                 for (
@@ -2482,11 +2513,31 @@ document.addEventListener(
         // generates Aadhaar Front.
         // ====================================================
 
-        downloadAllAadhaar.onclick =
-            () =>
-                generateZipArchive(
-                    DOCUMENT_TYPES.AADHAAR_FRONT
-                );
+        if (downloadAllAadhaar) {
+            downloadAllAadhaar.onclick =
+                () =>
+                    generateZipArchive(
+                        DOCUMENT_TYPES.AADHAAR_FRONT
+                    );
+        }
+
+
+        if (downloadAllAadhaarBack) {
+            downloadAllAadhaarBack.onclick =
+                () =>
+                    generateZipArchive(
+                        DOCUMENT_TYPES.AADHAAR_BACK
+                    );
+        }
+
+
+        if (downloadAllAadhaarBoth) {
+            downloadAllAadhaarBoth.onclick =
+                () =>
+                    generateZipArchive(
+                        DOCUMENT_TYPES.AADHAAR_BOTH
+                    );
+        }
 
 
         // ====================================================
@@ -2557,14 +2608,11 @@ document.addEventListener(
 
                 try {
 
-                    downloadAllPan.disabled =
-                        true;
-
-                    downloadAllAadhaar.disabled =
-                        true;
-
-                    downloadBothZip.disabled =
-                        true;
+                    if (downloadAllPan) downloadAllPan.disabled = true;
+                    if (downloadAllAadhaar) downloadAllAadhaar.disabled = true;
+                    if (downloadAllAadhaarBack) downloadAllAadhaarBack.disabled = true;
+                    if (downloadAllAadhaarBoth) downloadAllAadhaarBoth.disabled = true;
+                    if (downloadBothZip) downloadBothZip.disabled = true;
 
 
                     for (
