@@ -5,6 +5,13 @@
 //     Main controller for the Synthetic PAN / Aadhaar OCR
 //     Test Data Generator.
 //
+// SUPPORTED DOCUMENT TYPES:
+//
+//     PAN
+//     Aadhaar_Front
+//     Aadhaar_Back
+//     Aadhaar_Both
+//
 // RESPONSIBILITIES:
 //
 //     MANUAL MODE
@@ -17,20 +24,39 @@
 //     BATCH MODE
 //     -----------------------------
 //     - Read Excel records.
+//     - Validate Excel structure.
 //     - Match photos.
 //     - Generate PAN cards.
-//     - Generate Aadhaar cards.
+//     - Generate Aadhaar front cards.
+//     - Generate Aadhaar back cards.
+//     - Generate Aadhaar combined cards.
 //     - Normalize photos to 900x1200.
-//     - Create individual ZIP files.
-//     - Create combined ZIP file.
+//     - Create ZIP files.
 //
 // ZIP STRUCTURE
 //     -----------------------------
 //
-//     All_Synthetic_Test_Cards.zip
-//
+//     PAN_Test_Cards.zip
 //     ├── PAN_Cards/
-//     ├── Aadhaar_Cards/
+//     └── Photos/
+//
+//     Aadhaar_Front_Test_Cards.zip
+//     ├── Aadhaar_Front_Cards/
+//     └── Photos/
+//
+//     Aadhaar_Back_Test_Cards.zip
+//     ├── Aadhaar_Back_Cards/
+//     └── Photos/
+//
+//     Aadhaar_Both_Test_Cards.zip
+//     ├── Aadhaar_Both_Cards/
+//     └── Photos/
+//
+//     All_Synthetic_Test_Cards.zip
+//     ├── PAN_Cards/
+//     ├── Aadhaar_Front_Cards/
+//     ├── Aadhaar_Back_Cards/
+//     ├── Aadhaar_Both_Cards/
 //     └── Photos/
 //
 // IMAGE REQUIREMENTS
@@ -45,20 +71,10 @@
 // DEPENDENCIES:
 //
 //     data-generator.js
-//         -> random test data
-//
 //     document-renderer.js
-//         -> renders PAN / Aadhaar canvas
-//
 //     image-export.js
-//         -> JPEG compression
-//         -> photo normalization
-//
 //     XLSX
-//         -> Excel processing
-//
 //     JSZip
-//         -> ZIP generation
 // ============================================================
 
 
@@ -76,7 +92,7 @@ document.addEventListener(
 
 
         // ----------------------------------------------------
-        // Mode
+        // MODE
         // ----------------------------------------------------
 
         const modeManualBtn =
@@ -93,7 +109,7 @@ document.addEventListener(
 
 
         // ----------------------------------------------------
-        // Manual form
+        // MANUAL FORM
         // ----------------------------------------------------
 
         const docTypeSelect =
@@ -122,7 +138,7 @@ document.addEventListener(
 
 
         // ----------------------------------------------------
-        // Manual actions
+        // MANUAL ACTIONS
         // ----------------------------------------------------
 
         const generateBtn =
@@ -139,7 +155,7 @@ document.addEventListener(
 
 
         // ----------------------------------------------------
-        // Preview
+        // PREVIEW
         // ----------------------------------------------------
 
         const canvas =
@@ -153,7 +169,7 @@ document.addEventListener(
 
 
         // ----------------------------------------------------
-        // Excel
+        // EXCEL
         // ----------------------------------------------------
 
         const uploadExcelTrigger =
@@ -170,7 +186,7 @@ document.addEventListener(
 
 
         // ----------------------------------------------------
-        // Photos
+        // PHOTOS
         // ----------------------------------------------------
 
         const bulkPhotoUpload =
@@ -187,7 +203,7 @@ document.addEventListener(
 
 
         // ----------------------------------------------------
-        // Batch status
+        // BATCH STATUS
         // ----------------------------------------------------
 
         const batchStatus =
@@ -204,7 +220,7 @@ document.addEventListener(
 
 
         // ----------------------------------------------------
-        // Batch table
+        // BATCH TABLE
         // ----------------------------------------------------
 
         const batchTableBody =
@@ -212,7 +228,7 @@ document.addEventListener(
 
 
         // ----------------------------------------------------
-        // Batch download buttons
+        // BATCH DOWNLOAD BUTTONS
         // ----------------------------------------------------
 
         const downloadAllPan =
@@ -220,6 +236,12 @@ document.addEventListener(
 
         const downloadAllAadhaar =
             $("downloadAllAadhaar");
+
+        const downloadAllAadhaarBack =
+            $("downloadAllAadhaarBack");
+
+        const downloadAllAadhaarBoth =
+            $("downloadAllAadhaarBoth");
 
         const downloadBothZip =
             $("downloadBothZip");
@@ -254,13 +276,32 @@ document.addEventListener(
 
 
         // ====================================================
+        // DOCUMENT TYPE CONSTANTS
+        // ====================================================
+
+        const DOCUMENT_TYPES = {
+
+            PAN:
+                "PAN",
+
+            AADHAAR_FRONT:
+                "Aadhaar_Front",
+
+            AADHAAR_BACK:
+                "Aadhaar_Back",
+
+            AADHAAR_BOTH:
+                "Aadhaar_Both"
+        };
+
+
+        // ====================================================
         // LOAD STREAMLIT PHOTOS
         // ====================================================
 
         if (
             window.BULK_PHOTOS &&
-            typeof window.BULK_PHOTOS ===
-                "object"
+            typeof window.BULK_PHOTOS === "object"
         ) {
 
             bulkPhotos = {
@@ -292,6 +333,29 @@ document.addEventListener(
 
 
         // ====================================================
+        // NORMALIZE PERSON NAME
+        // ====================================================
+
+        function normalizePersonName(
+            value
+        ) {
+
+            return String(
+                value || ""
+            )
+                .toLowerCase()
+                .replace(
+                    /\.[^/.]+$/,
+                    ""
+                )
+                .replace(
+                    /[^a-z0-9]/g,
+                    ""
+                );
+        }
+
+
+        // ====================================================
         // FIND PHOTO FOR RECORD
         // ====================================================
 
@@ -313,7 +377,7 @@ document.addEventListener(
 
 
             // ------------------------------------------------
-            // First attempt:
+            // FIRST:
             // Match Photo column.
             // ------------------------------------------------
 
@@ -324,8 +388,7 @@ document.addEventListener(
                         key =>
                             normalizeFileName(
                                 key
-                            ) ===
-                            requested
+                            ) === requested
                     );
 
 
@@ -335,7 +398,7 @@ document.addEventListener(
 
                         dataUrl:
                             bulkPhotos[
-                                matchedKey
+                            matchedKey
                             ],
 
                         filename:
@@ -349,23 +412,14 @@ document.addEventListener(
 
 
             // ------------------------------------------------
-            // Second attempt:
+            // SECOND:
             // Match person name.
             // ------------------------------------------------
 
             const normalizedName =
-                String(
-                    name || ""
-                )
-                    .toLowerCase()
-                    .replace(
-                        /\.[^/.]+$/,
-                        ""
-                    )
-                    .replace(
-                        /[^a-z0-9]/g,
-                        ""
-                    );
+                normalizePersonName(
+                    name
+                );
 
 
             if (normalizedName) {
@@ -373,19 +427,9 @@ document.addEventListener(
                 const matchedKey =
                     keys.find(
                         key =>
-                            String(
+                            normalizePersonName(
                                 key
-                            )
-                                .toLowerCase()
-                                .replace(
-                                    /\.[^/.]+$/,
-                                    ""
-                                )
-                                .replace(
-                                    /[^a-z0-9]/g,
-                                    ""
-                                ) ===
-                            normalizedName
+                            ) === normalizedName
                     );
 
 
@@ -395,7 +439,7 @@ document.addEventListener(
 
                         dataUrl:
                             bulkPhotos[
-                                matchedKey
+                            matchedKey
                             ],
 
                         filename:
@@ -407,6 +451,10 @@ document.addEventListener(
                 }
             }
 
+
+            // ------------------------------------------------
+            // NO MATCH
+            // ------------------------------------------------
 
             return {
 
@@ -513,9 +561,9 @@ document.addEventListener(
             };
 
 
-        // ====================================================
+        // ============================================================
         // BUILD MANUAL PERSON OBJECT
-        // ====================================================
+        // ============================================================
 
         function getManualPerson() {
 
@@ -527,38 +575,56 @@ document.addEventListener(
                 inputNumber.value.trim();
 
 
+            const isPan =
+                type === "PAN";
+
+
+            const isAadhaar =
+                type === "Aadhaar" ||
+                type === "Aadhaar_Front" ||
+                type === "Aadhaar_Back" ||
+                type === "Aadhaar_Both";
+
+
             return {
 
                 name:
                     inputName.value.trim(),
 
+
                 parentName:
                     inputFather.value.trim(),
+
 
                 dob:
                     inputDob.value.trim(),
 
+
                 gender:
                     inputGender.value,
+
 
                 address:
                     inputAddress.value.trim(),
 
+
                 pan:
-                    type === "PAN"
+                    isPan
                         ? (
                             number ||
                             generatePANNumber()
                         )
                         : "",
 
+
                 aadhaar:
-                    type === "Aadhaar"
+                    isAadhaar
                         ? (
                             number ||
                             generateAadharNumber()
                         )
                         : ""
+
             };
         }
 
@@ -573,14 +639,20 @@ document.addEventListener(
                 getManualPerson();
 
 
-            if (
-                !person.name &&
-                !person.parentName &&
-                !person.dob &&
-                !person.address &&
-                !person.pan &&
-                !person.aadhaar
-            ) {
+            const type =
+                docTypeSelect.value;
+
+
+            const hasData =
+                person.name ||
+                person.parentName ||
+                person.dob ||
+                person.address ||
+                person.pan ||
+                person.aadhaar;
+
+
+            if (!hasData) {
 
                 canvas
                     .getContext("2d")
@@ -611,7 +683,7 @@ document.addEventListener(
             await drawSyntheticDocument(
                 canvas,
                 person,
-                docTypeSelect.value,
+                type,
                 currentPhotoDataUrl
             );
 
@@ -628,13 +700,18 @@ document.addEventListener(
         generateBtn.onclick =
             async () => {
 
-                if (
-                    !inputName.value.trim()
-                ) {
+                const isBackOnly =
+                    docTypeSelect.value === "Aadhaar_Back";
 
+                if (isBackOnly && !inputAddress.value.trim() && !inputName.value.trim()) {
+                    manualStatus.textContent =
+                        "Enter at least an address or name before generating.";
+                    return;
+                }
+
+                if (!isBackOnly && !inputName.value.trim()) {
                     manualStatus.textContent =
                         "Enter at least a name before generating.";
-
                     return;
                 }
 
@@ -768,16 +845,21 @@ document.addEventListener(
         ].forEach(
             element => {
 
-                element.addEventListener(
-                    "input",
-                    () => {
+                ["input", "change"].forEach(
+                    eventType => {
 
-                        if (
-                            hasGeneratedManual
-                        ) {
+                        element.addEventListener(
+                            eventType,
+                            () => {
 
-                            renderManual();
-                        }
+                                if (
+                                    hasGeneratedManual
+                                ) {
+
+                                    renderManual();
+                                }
+                            }
+                        );
                     }
                 );
             }
@@ -786,8 +868,6 @@ document.addEventListener(
 
         // ====================================================
         // COMPRESS DOCUMENT CANVAS
-        //
-        // Uses image-export.js.
         // ====================================================
 
         async function getCompressedImageBlob(
@@ -844,8 +924,6 @@ document.addEventListener(
 
         // ====================================================
         // MANUAL DOWNLOAD
-        //
-        // Uses the same <80 KB compression used by ZIP files.
         // ====================================================
 
         downloadCardBtn.onclick =
@@ -1333,255 +1411,404 @@ document.addEventListener(
 
 
         // ====================================================
-        // EXCEL PROCESSING
+        // EXCEL SCHEMAS
         // ====================================================
 
+        const EXCEL_SCHEMAS = {
+
+            individual: {
+
+                sheet:
+                    "Template",
+
+                columns: [
+
+                    "Name",
+                    "DOB",
+                    "Gender",
+                    "Address",
+                    "ParentName",
+                    "Photo",
+                    "PAN",
+                    "Aadhaar"
+                ]
+            }
+        };
 
 
-// ====================================================
-// EXCEL SCHEMAS
-// ====================================================
+        // ====================================================
+        // GENERIC EXCEL VALIDATOR
+        // ====================================================
 
-const EXCEL_SCHEMAS = {
-    individual: {
-        sheet: "Template",
-        columns: [
-            "Name",
-            "DOB",
-            "Gender",
-            "Address",
-            "ParentName",
-            "Photo",
-            "PAN",
-            "Aadhaar"
-        ]
-    }
-};
+        function validateExcel(
+            workbook,
+            schema
+        ) {
+
+            const sheets =
+                workbook.SheetNames || [];
 
 
-// ====================================================
-// GENERIC EXCEL VALIDATOR
-// ====================================================
+            if (
+                sheets.length !== 1 ||
+                sheets[0] !== schema.sheet
+            ) {
 
-function validateExcel(workbook, schema) {
-    const sheets = workbook.SheetNames || [];
+                throw new Error(
+                    `Invalid Excel template. ` +
+                    `Use the provided sample Excel ` +
+                    `with a "${schema.sheet}" sheet.`
+                );
+            }
 
-    if (sheets.length !== 1 || sheets[0] !== schema.sheet) {
-        throw new Error(
-            `Invalid Excel template. Use the provided sample Excel with a "${schema.sheet}" sheet.`
-        );
-    }
 
-    const sheet = workbook.Sheets[schema.sheet];
+            const sheet =
+                workbook.Sheets[
+                schema.sheet
+                ];
 
-    const matrix = XLSX.utils.sheet_to_json(sheet, {
-        header: 1,
-        defval: "",
-        blankrows: false
-    });
 
-    const headers = (matrix[0] || []).map(
-        value => String(value ?? "").trim()
-    );
+            const matrix =
+                XLSX.utils.sheet_to_json(
+                    sheet,
+                    {
+                        header: 1,
+                        defval: "",
+                        blankrows: false
+                    }
+                );
 
-    if (
-        headers.length !== schema.columns.length ||
-        headers.some(
-            (value, index) =>
-                value !== schema.columns[index]
-        )
-    ) {
-        throw new Error(
-            `Invalid Excel template. Required columns: ${schema.columns.join(", ")}.`
-        );
-    }
 
-    if (
-        !matrix
-            .slice(1)
-            .some(row =>
-                row.some(
+            const headers =
+                (
+                    matrix[0] || []
+                ).map(
                     value =>
-                        String(value ?? "").trim() !== ""
+                        String(
+                            value ?? ""
+                        ).trim()
+                );
+
+
+            if (
+                headers.length !==
+                schema.columns.length ||
+                headers.some(
+                    (
+                        value,
+                        index
+                    ) =>
+                        value !==
+                        schema.columns[index]
                 )
-            )
-    ) {
-        throw new Error(
-            "Excel template must contain at least one data row."
-        );
-    }
+            ) {
 
-    return sheet;
-}
+                throw new Error(
+                    `Invalid Excel template. ` +
+                    `Required columns: ` +
+                    `${schema.columns.join(", ")}.`
+                );
+            }
 
 
-// ====================================================
-// EXCEL UPLOAD
-// ====================================================
-
-excelUpload.onchange = event => {
-    const file = event.target.files[0];
-
-    if (!file) return;
-
-    excelFileName.textContent = file.name;
-    batchStatus.textContent =
-        "Reading and validating Excel...";
-
-    parsedRecords = [];
-    renderBatchTable();
-    updateSummary();
-    setBatchButtons();
-
-    const reader = new FileReader();
-
-    reader.onload = event => {
-        try {
-            const workbook = XLSX.read(
-                new Uint8Array(event.target.result),
-                { type: "array" }
-            );
-
-            const sheet = validateExcel(
-                workbook,
-                EXCEL_SCHEMAS.individual
-            );
-
-            const rows = XLSX.utils.sheet_to_json(
-                sheet,
-                { defval: "" }
-            );
-
-            parsedRecords = rows.map(
-                (row, index) => {
-                    const name = String(
-                        valueFromRow(row, ["Name"]) ||
-                        generateRandomName()
-                    ).trim().toUpperCase();
-
-                    const photo = String(
-                        valueFromRow(row, ["Photo"]) || ""
-                    ).trim();
-
-                    const photoMatch =
-                        findBulkPhoto(photo, name);
-
-                    const pan = String(
-                        valueFromRow(row, ["PAN"]) || ""
-                    ).trim();
-
-                    const aadhaar = String(
-                        valueFromRow(
-                            row,
-                            ["Aadhaar"]
-                        ) || ""
-                    ).trim();
-
-                    return {
-                        rowNumber: index + 2,
-
-                        name,
-
-                        dob:
-                            normalizeDate(
-                                valueFromRow(
-                                    row,
-                                    ["DOB"]
-                                ) ||
-                                generateRandomDOB()
-                            ),
-
-                        gender:
-                            String(
-                                valueFromRow(
-                                    row,
-                                    ["Gender"]
-                                ) ||
-                                generateRandomGender()
-                            ).trim(),
-
-                        address:
-                            String(
-                                valueFromRow(
-                                    row,
-                                    ["Address"]
-                                ) ||
-                                generateRandomAddress()
-                            ).trim(),
-
-                        parentName:
-                            String(
-                                valueFromRow(
-                                    row,
-                                    ["ParentName"]
-                                ) ||
-                                generateRandomFatherName()
+            if (
+                !matrix
+                    .slice(1)
+                    .some(
+                        row =>
+                            row.some(
+                                value =>
+                                    String(
+                                        value ?? ""
+                                    ).trim() !== ""
                             )
-                                .trim()
-                                .toUpperCase(),
+                    )
+            ) {
 
-                        pan:
-                            pan ||
-                            generatePANNumber(),
+                throw new Error(
+                    "Excel template must contain at least one data row."
+                );
+            }
 
-                        aadhaar:
-                            aadhaar ||
-                            generateAadharNumber(),
 
-                        photo,
-
-                        photoDataUrl:
-                            photoMatch.dataUrl,
-
-                        photoFilename:
-                            photoMatch.filename,
-
-                        photoMatchReason:
-                            photoMatch.reason
-                    };
-                }
-            );
-
-            renderBatchTable();
-            updateSummary();
-            setBatchButtons();
-
-            batchStatus.textContent =
-                `Excel validated successfully. Parsed ${parsedRecords.length} record(s).`;
-
-        } catch (error) {
-            console.error(
-                "Excel validation failed:",
-                error
-            );
-
-            parsedRecords = [];
-
-            renderBatchTable();
-            updateSummary();
-            setBatchButtons();
-
-            batchStatus.textContent =
-                error.message ||
-                "Invalid Excel template.";
+            return sheet;
         }
-    };
 
-    reader.onerror = () => {
-        parsedRecords = [];
 
-        renderBatchTable();
-        updateSummary();
-        setBatchButtons();
+        // ====================================================
+        // EXCEL UPLOAD
+        // ====================================================
 
-        batchStatus.textContent =
-            "Could not read the Excel file.";
-    };
+        excelUpload.onchange =
+            event => {
 
-    reader.readAsArrayBuffer(file);
-};
+                const file =
+                    event.target.files[0];
 
-        
+
+                if (!file) {
+
+                    return;
+                }
+
+
+                excelFileName.textContent =
+                    file.name;
+
+
+                batchStatus.textContent =
+                    "Reading and validating Excel...";
+
+
+                parsedRecords =
+                    [];
+
+
+                renderBatchTable();
+
+                updateSummary();
+
+                setBatchButtons();
+
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    event => {
+
+                        try {
+
+                            const workbook =
+                                XLSX.read(
+                                    new Uint8Array(
+                                        event.target.result
+                                    ),
+                                    {
+                                        type:
+                                            "array"
+                                    }
+                                );
+
+
+                            const sheet =
+                                validateExcel(
+                                    workbook,
+                                    EXCEL_SCHEMAS.individual
+                                );
+
+
+                            const rows =
+                                XLSX.utils.sheet_to_json(
+                                    sheet,
+                                    {
+                                        defval:
+                                            ""
+                                    }
+                                );
+
+
+                            parsedRecords =
+                                rows.map(
+                                    (
+                                        row,
+                                        index
+                                    ) => {
+
+                                        const name =
+                                            String(
+                                                valueFromRow(
+                                                    row,
+                                                    [
+                                                        "Name"
+                                                    ]
+                                                ) ||
+                                                generateRandomName()
+                                            )
+                                                .trim()
+                                                .toUpperCase();
+
+
+                                        const photo =
+                                            String(
+                                                valueFromRow(
+                                                    row,
+                                                    [
+                                                        "Photo"
+                                                    ]
+                                                ) ||
+                                                ""
+                                            ).trim();
+
+
+                                        const photoMatch =
+                                            findBulkPhoto(
+                                                photo,
+                                                name
+                                            );
+
+
+                                        const pan =
+                                            String(
+                                                valueFromRow(
+                                                    row,
+                                                    [
+                                                        "PAN"
+                                                    ]
+                                                ) ||
+                                                ""
+                                            ).trim();
+
+
+                                        const aadhaar =
+                                            String(
+                                                valueFromRow(
+                                                    row,
+                                                    [
+                                                        "Aadhaar"
+                                                    ]
+                                                ) ||
+                                                ""
+                                            ).trim();
+
+
+                                        return {
+
+                                            rowNumber:
+                                                index + 2,
+
+                                            name,
+
+                                            dob:
+                                                normalizeDate(
+                                                    valueFromRow(
+                                                        row,
+                                                        [
+                                                            "DOB"
+                                                        ]
+                                                    ) ||
+                                                    generateRandomDOB()
+                                                ),
+
+                                            gender:
+                                                String(
+                                                    valueFromRow(
+                                                        row,
+                                                        [
+                                                            "Gender"
+                                                        ]
+                                                    ) ||
+                                                    generateRandomGender()
+                                                ).trim(),
+
+                                            address:
+                                                String(
+                                                    valueFromRow(
+                                                        row,
+                                                        [
+                                                            "Address"
+                                                        ]
+                                                    ) ||
+                                                    generateRandomAddress()
+                                                ).trim(),
+
+                                            parentName:
+                                                String(
+                                                    valueFromRow(
+                                                        row,
+                                                        [
+                                                            "ParentName"
+                                                        ]
+                                                    ) ||
+                                                    generateRandomFatherName()
+                                                )
+                                                    .trim()
+                                                    .toUpperCase(),
+
+                                            pan:
+                                                pan ||
+                                                generatePANNumber(),
+
+                                            aadhaar:
+                                                aadhaar ||
+                                                generateAadharNumber(),
+
+                                            photo,
+
+                                            photoDataUrl:
+                                                photoMatch.dataUrl,
+
+                                            photoFilename:
+                                                photoMatch.filename,
+
+                                            photoMatchReason:
+                                                photoMatch.reason
+                                        };
+                                    }
+                                );
+
+
+                            renderBatchTable();
+
+                            updateSummary();
+
+                            setBatchButtons();
+
+
+                            batchStatus.textContent =
+                                `Excel validated successfully. ` +
+                                `Parsed ${parsedRecords.length} record(s).`;
+
+                        } catch (error) {
+
+                            console.error(
+                                "Excel validation failed:",
+                                error
+                            );
+
+
+                            parsedRecords =
+                                [];
+
+
+                            renderBatchTable();
+
+                            updateSummary();
+
+                            setBatchButtons();
+
+
+                            batchStatus.textContent =
+                                error.message ||
+                                "Invalid Excel template.";
+                        }
+                    };
+
+
+                reader.onerror =
+                    () => {
+
+                        parsedRecords =
+                            [];
+
+
+                        renderBatchTable();
+
+                        updateSummary();
+
+                        setBatchButtons();
+
+
+                        batchStatus.textContent =
+                            "Could not read the Excel file.";
+                    };
+
+
+                reader.readAsArrayBuffer(
+                    file
+                );
+            };
 
 
         // ====================================================
@@ -1657,16 +1884,34 @@ excelUpload.onchange = event => {
                 parsedRecords.length === 0;
 
 
-            downloadAllPan.disabled =
-                disabled;
+            if (downloadAllPan) {
+                downloadAllPan.disabled =
+                    disabled;
+            }
 
 
-            downloadAllAadhaar.disabled =
-                disabled;
+            if (downloadAllAadhaar) {
+                downloadAllAadhaar.disabled =
+                    disabled;
+            }
 
 
-            downloadBothZip.disabled =
-                disabled;
+            if (downloadAllAadhaarBack) {
+                downloadAllAadhaarBack.disabled =
+                    disabled;
+            }
+
+
+            if (downloadAllAadhaarBoth) {
+                downloadAllAadhaarBoth.disabled =
+                    disabled;
+            }
+
+
+            if (downloadBothZip) {
+                downloadBothZip.disabled =
+                    disabled;
+            }
         }
 
 
@@ -1752,9 +1997,9 @@ excelUpload.onchange = event => {
 
                                         <small>
                                             ${escapeHtml(
-                                                record.photoFilename ||
-                                                record.photo
-                                            )}
+                                        record.photoFilename ||
+                                        record.photo
+                                    )}
                                         </small>
 
                                         <span
@@ -1777,9 +2022,9 @@ excelUpload.onchange = event => {
 
                                         <small>
                                             ${escapeHtml(
-                                                record.photo ||
-                                                "Not specified"
-                                            )}
+                                        record.photo ||
+                                        "Not specified"
+                                    )}
                                         </small>
 
                                         <span
@@ -1805,42 +2050,42 @@ excelUpload.onchange = event => {
 
                                 <td>
                                     ${escapeHtml(
-                                        record.name
-                                    )}
+                                record.name
+                            )}
                                 </td>
 
                                 <td>
                                     ${escapeHtml(
-                                        record.dob
-                                    )}
+                                record.dob
+                            )}
                                 </td>
 
                                 <td>
                                     ${escapeHtml(
-                                        record.gender
-                                    )}
+                                record.gender
+                            )}
                                 </td>
 
                                 <td>
                                     <code>
                                         ${escapeHtml(
-                                            record.pan
-                                        )}
+                                record.pan
+                            )}
                                     </code>
                                 </td>
 
                                 <td>
                                     <code>
                                         ${escapeHtml(
-                                            record.aadhaar
-                                        )}
+                                record.aadhaar
+                            )}
                                     </code>
                                 </td>
 
                                 <td>
                                     ${escapeHtml(
-                                        record.address
-                                    )}
+                                record.address
+                            )}
                                 </td>
 
                             </tr>
@@ -1880,13 +2125,6 @@ excelUpload.onchange = event => {
 
         // ====================================================
         // ADD NORMALIZED PHOTO TO ZIP
-        //
-        // PHOTO REQUIREMENT:
-        //
-        //     900 x 1200 pixels
-        //
-        // The actual conversion is handled by
-        // preparePhotoForZip() in image-export.js.
         // ====================================================
 
         async function addPhotoToZip(
@@ -1943,18 +2181,27 @@ excelUpload.onchange = event => {
 
             // ------------------------------------------------
             // Render document
+            //
+            // Aadhaar Back does not require a photo.
             // ------------------------------------------------
+
+            const renderPhoto =
+                type ===
+                    DOCUMENT_TYPES.AADHAAR_BACK
+                    ? null
+                    : record.photoDataUrl;
+
 
             await drawSyntheticDocument(
                 tempCanvas,
                 record,
                 type,
-                record.photoDataUrl
+                renderPhoto
             );
 
 
             // ------------------------------------------------
-            // Compress below 80 KB
+            // Compress document
             // ------------------------------------------------
 
             const result =
@@ -1985,17 +2232,118 @@ excelUpload.onchange = event => {
 
 
         // ====================================================
+        // GET CARD FOLDER NAME
+        // ====================================================
+
+        function getCardFolderName(
+            type
+        ) {
+
+            switch (type) {
+
+                case DOCUMENT_TYPES.PAN:
+
+                    return "PAN_Cards";
+
+
+                case DOCUMENT_TYPES.AADHAAR_FRONT:
+
+                    return "Aadhaar_Front_Cards";
+
+
+                case DOCUMENT_TYPES.AADHAAR_BACK:
+
+                    return "Aadhaar_Back_Cards";
+
+
+                case DOCUMENT_TYPES.AADHAAR_BOTH:
+
+                    return "Aadhaar_Both_Cards";
+
+
+                default:
+
+                    return "Cards";
+            }
+        }
+
+
+        // ====================================================
+        // GET ZIP FILE NAME
+        // ====================================================
+
+        function getZipFileName(
+            type
+        ) {
+
+            switch (type) {
+
+                case DOCUMENT_TYPES.PAN:
+
+                    return "PAN_Test_Cards.zip";
+
+
+                case DOCUMENT_TYPES.AADHAAR_FRONT:
+
+                    return "Aadhaar_Front_Test_Cards.zip";
+
+
+                case DOCUMENT_TYPES.AADHAAR_BACK:
+
+                    return "Aadhaar_Back_Test_Cards.zip";
+
+
+                case DOCUMENT_TYPES.AADHAAR_BOTH:
+
+                    return "Aadhaar_Both_Test_Cards.zip";
+
+
+                default:
+
+                    return "Synthetic_Test_Cards.zip";
+            }
+        }
+
+
+        // ====================================================
+        // GET DISPLAY NAME
+        // ====================================================
+
+        function getDocumentDisplayName(
+            type
+        ) {
+
+            switch (type) {
+
+                case DOCUMENT_TYPES.PAN:
+
+                    return "PAN";
+
+
+                case DOCUMENT_TYPES.AADHAAR_FRONT:
+
+                    return "Aadhaar Front";
+
+
+                case DOCUMENT_TYPES.AADHAAR_BACK:
+
+                    return "Aadhaar Back";
+
+
+                case DOCUMENT_TYPES.AADHAAR_BOTH:
+
+                    return "Aadhaar Both";
+
+
+                default:
+
+                    return type;
+            }
+        }
+
+
+        // ====================================================
         // GENERATE TYPE ZIP
-        //
-        // PAN ZIP:
-        //
-        //     PAN_Cards/
-        //     Photos/
-        //
-        // Aadhaar ZIP:
-        //
-        //     Aadhaar_Cards/
-        //     Photos/
         // ====================================================
 
         async function generateZipArchive(
@@ -2019,9 +2367,9 @@ excelUpload.onchange = event => {
 
             const cardFolder =
                 zip.folder(
-                    type === "PAN"
-                        ? "PAN_Cards"
-                        : "Aadhaar_Cards"
+                    getCardFolderName(
+                        type
+                    )
                 );
 
 
@@ -2039,14 +2387,11 @@ excelUpload.onchange = event => {
 
             try {
 
-                downloadAllPan.disabled =
-                    true;
-
-                downloadAllAadhaar.disabled =
-                    true;
-
-                downloadBothZip.disabled =
-                    true;
+                if (downloadAllPan) downloadAllPan.disabled = true;
+                if (downloadAllAadhaar) downloadAllAadhaar.disabled = true;
+                if (downloadAllAadhaarBack) downloadAllAadhaarBack.disabled = true;
+                if (downloadAllAadhaarBoth) downloadAllAadhaarBoth.disabled = true;
+                if (downloadBothZip) downloadBothZip.disabled = true;
 
 
                 for (
@@ -2059,13 +2404,19 @@ excelUpload.onchange = event => {
                         parsedRecords[i];
 
 
+                    const displayName =
+                        getDocumentDisplayName(
+                            type
+                        );
+
+
                     batchStatus.textContent =
-                        `Generating ${type}: ` +
+                        `Generating ${displayName}: ` +
                         `${i + 1}/${parsedRecords.length}...`;
 
 
                     // ------------------------------------------------
-                    // Document
+                    // DOCUMENT
                     // ------------------------------------------------
 
                     const result =
@@ -2079,7 +2430,7 @@ excelUpload.onchange = event => {
 
 
                     // ------------------------------------------------
-                    // Photo
+                    // PHOTO
                     // ------------------------------------------------
 
                     await addPhotoToZip(
@@ -2090,18 +2441,18 @@ excelUpload.onchange = event => {
 
 
                     batchStatus.textContent =
-                        `${type} ${i + 1}/${parsedRecords.length} ` +
-                        `ready ` +
+                        `${displayName} ` +
+                        `${i + 1}/${parsedRecords.length} ready ` +
                         `(${result.sizeKB.toFixed(1)} KB)`;
                 }
 
 
                 // ------------------------------------------------
-                // Create ZIP
+                // CREATE ZIP
                 // ------------------------------------------------
 
                 batchStatus.textContent =
-                    `Preparing ${type} ZIP...`;
+                    `Preparing ${getDocumentDisplayName(type)} ZIP...`;
 
 
                 const zipBlob =
@@ -2115,14 +2466,13 @@ excelUpload.onchange = event => {
 
                 downloadBlob(
                     zipBlob,
-                    `${type}_Test_Cards.zip`
+                    getZipFileName(type)
                 );
 
 
                 batchStatus.textContent =
-                    `${type} ZIP ready. ` +
+                    `${getDocumentDisplayName(type)} ZIP ready. ` +
                     `Cards < 80 KB, photos 900x1200.`;
-
 
             } catch (error) {
 
@@ -2134,7 +2484,7 @@ excelUpload.onchange = event => {
 
                 batchStatus.textContent =
                     error.message ||
-                    `Could not generate ${type} ZIP.`;
+                    `Could not generate ${getDocumentDisplayName(type)} ZIP.`;
 
             } finally {
 
@@ -2150,29 +2500,56 @@ excelUpload.onchange = event => {
         downloadAllPan.onclick =
             () =>
                 generateZipArchive(
-                    "PAN"
+                    DOCUMENT_TYPES.PAN
                 );
 
 
         // ====================================================
         // AADHAAR ZIP BUTTON
+        //
+        // Existing HTML button:
+        //     downloadAllAadhaar
+        //
+        // generates Aadhaar Front.
         // ====================================================
 
-        downloadAllAadhaar.onclick =
-            () =>
-                generateZipArchive(
-                    "Aadhaar"
-                );
+        if (downloadAllAadhaar) {
+            downloadAllAadhaar.onclick =
+                () =>
+                    generateZipArchive(
+                        DOCUMENT_TYPES.AADHAAR_FRONT
+                    );
+        }
+
+
+        if (downloadAllAadhaarBack) {
+            downloadAllAadhaarBack.onclick =
+                () =>
+                    generateZipArchive(
+                        DOCUMENT_TYPES.AADHAAR_BACK
+                    );
+        }
+
+
+        if (downloadAllAadhaarBoth) {
+            downloadAllAadhaarBoth.onclick =
+                () =>
+                    generateZipArchive(
+                        DOCUMENT_TYPES.AADHAAR_BOTH
+                    );
+        }
 
 
         // ====================================================
         // COMBINED ZIP
         //
-        // STRUCTURE:
+        // Generates:
         //
-        //     PAN_Cards/
-        //     Aadhaar_Cards/
-        //     Photos/
+        //     PAN
+        //     Aadhaar Front
+        //     Aadhaar Back
+        //     Aadhaar Both
+        //     Photos
         // ====================================================
 
         downloadBothZip.onclick =
@@ -2181,6 +2558,9 @@ excelUpload.onchange = event => {
                 if (
                     !parsedRecords.length
                 ) {
+
+                    batchStatus.textContent =
+                        "No records available.";
 
                     return;
                 }
@@ -2196,9 +2576,21 @@ excelUpload.onchange = event => {
                     );
 
 
-                const aadhaarFolder =
+                const aadhaarFrontFolder =
                     zip.folder(
-                        "Aadhaar_Cards"
+                        "Aadhaar_Front_Cards"
+                    );
+
+
+                const aadhaarBackFolder =
+                    zip.folder(
+                        "Aadhaar_Back_Cards"
+                    );
+
+
+                const aadhaarBothFolder =
+                    zip.folder(
+                        "Aadhaar_Both_Cards"
                     );
 
 
@@ -2216,14 +2608,11 @@ excelUpload.onchange = event => {
 
                 try {
 
-                    downloadAllPan.disabled =
-                        true;
-
-                    downloadAllAadhaar.disabled =
-                        true;
-
-                    downloadBothZip.disabled =
-                        true;
+                    if (downloadAllPan) downloadAllPan.disabled = true;
+                    if (downloadAllAadhaar) downloadAllAadhaar.disabled = true;
+                    if (downloadAllAadhaarBack) downloadAllAadhaarBack.disabled = true;
+                    if (downloadAllAadhaarBoth) downloadAllAadhaarBoth.disabled = true;
+                    if (downloadBothZip) downloadBothZip.disabled = true;
 
 
                     for (
@@ -2251,26 +2640,64 @@ excelUpload.onchange = event => {
                                 tempCanvas,
                                 record,
                                 i,
-                                "PAN"
+                                DOCUMENT_TYPES.PAN
                             );
 
 
                         // =========================================
-                        // AADHAAR
+                        // AADHAAR FRONT
                         // =========================================
 
                         batchStatus.textContent =
-                            `Generating Aadhaar: ` +
+                            `Generating Aadhaar Front: ` +
                             `${i + 1}/${parsedRecords.length}...`;
 
 
-                        const aadhaarResult =
+                        const aadhaarFrontResult =
                             await addDocumentToZip(
-                                aadhaarFolder,
+                                aadhaarFrontFolder,
                                 tempCanvas,
                                 record,
                                 i,
-                                "Aadhaar"
+                                DOCUMENT_TYPES.AADHAAR_FRONT
+                            );
+
+
+                        // =========================================
+                        // AADHAAR BACK
+                        // =========================================
+
+                        batchStatus.textContent =
+                            `Generating Aadhaar Back: ` +
+                            `${i + 1}/${parsedRecords.length}...`;
+
+
+                        const aadhaarBackResult =
+                            await addDocumentToZip(
+                                aadhaarBackFolder,
+                                tempCanvas,
+                                record,
+                                i,
+                                DOCUMENT_TYPES.AADHAAR_BACK
+                            );
+
+
+                        // =========================================
+                        // AADHAAR BOTH
+                        // =========================================
+
+                        batchStatus.textContent =
+                            `Generating Aadhaar Both: ` +
+                            `${i + 1}/${parsedRecords.length}...`;
+
+
+                        const aadhaarBothResult =
+                            await addDocumentToZip(
+                                aadhaarBothFolder,
+                                tempCanvas,
+                                record,
+                                i,
+                                DOCUMENT_TYPES.AADHAAR_BOTH
                             );
 
 
@@ -2290,11 +2717,17 @@ excelUpload.onchange = event => {
                         );
 
 
+                        // =========================================
+                        // RECORD COMPLETE
+                        // =========================================
+
                         batchStatus.textContent =
                             `Record ${i + 1}/` +
                             `${parsedRecords.length} ready ` +
                             `(PAN ${panResult.sizeKB.toFixed(1)} KB, ` +
-                            `Aadhaar ${aadhaarResult.sizeKB.toFixed(1)} KB)`;
+                            `Front ${aadhaarFrontResult.sizeKB.toFixed(1)} KB, ` +
+                            `Back ${aadhaarBackResult.sizeKB.toFixed(1)} KB, ` +
+                            `Both ${aadhaarBothResult.sizeKB.toFixed(1)} KB)`;
                     }
 
 
@@ -2323,8 +2756,8 @@ excelUpload.onchange = event => {
 
                     batchStatus.textContent =
                         "Combined ZIP ready. " +
-                        "Cards < 80 KB, photos 900x1200.";
-
+                        "PAN + Aadhaar Front + Aadhaar Back + " +
+                        "Aadhaar Both + Photos included.";
 
                 } catch (error) {
 

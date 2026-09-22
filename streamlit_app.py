@@ -225,13 +225,31 @@ PAN_TEMPLATE = (
     / "PAN_Template.png"
 )
 
-AADHAAR_TEMPLATE = (
+AADHAAR_FRONT_TEMPLATE = (
     BASE_DIR
     / "templates"
     / "individual"
     / "id"
     / "AADHAR_Template.png"
 )
+
+AADHAAR_BACK_TEMPLATE = (
+    BASE_DIR
+    / "templates"
+    / "individual"
+    / "id"
+    / "AADHAR_Back_Template.png"
+)
+
+AADHAAR_BOTH_TEMPLATE = (
+    BASE_DIR
+    / "templates"
+    / "individual"
+    / "id"
+    / "AADHAR_Both_Template.png"
+)
+
+AADHAAR_TEMPLATE = AADHAAR_FRONT_TEMPLATE
 
 
 # Entity currently uses the shared PAN template.
@@ -274,7 +292,9 @@ required_files = [
     CSS_FILE,
     TEMPLATE_EXCEL,
     PAN_TEMPLATE,
-    AADHAAR_TEMPLATE,
+    AADHAAR_FRONT_TEMPLATE,
+    AADHAAR_BACK_TEMPLATE,
+    AADHAAR_BOTH_TEMPLATE,
     *JS_FILES,
 ]
 
@@ -340,10 +360,22 @@ pan_template_base64 = file_to_data_url(
     "image/png",
 )
 
-aadhaar_template_base64 = file_to_data_url(
-    AADHAAR_TEMPLATE,
+aadhaar_front_template_base64 = file_to_data_url(
+    AADHAAR_FRONT_TEMPLATE,
     "image/png",
 )
+
+aadhaar_back_template_base64 = file_to_data_url(
+    AADHAAR_BACK_TEMPLATE,
+    "image/png",
+)
+
+aadhaar_both_template_base64 = file_to_data_url(
+    AADHAAR_BOTH_TEMPLATE,
+    "image/png",
+)
+
+aadhaar_template_base64 = aadhaar_front_template_base64
 
 
 # ============================================================
@@ -510,8 +542,17 @@ window.OCR_TEMPLATE_BASE64 =
 window.PAN_TEMPLATE_BASE64 =
     {json.dumps(pan_template_base64)};
 
+window.AADHAAR_FRONT_TEMPLATE_BASE64 =
+    {json.dumps(aadhaar_front_template_base64)};
+
 window.AADHAAR_TEMPLATE_BASE64 =
     {json.dumps(aadhaar_template_base64)};
+
+window.AADHAAR_BACK_TEMPLATE_BASE64 =
+    {json.dumps(aadhaar_back_template_base64)};
+
+window.AADHAAR_BOTH_TEMPLATE_BASE64 =
+    {json.dumps(aadhaar_both_template_base64)};
 
 window.BULK_PHOTOS =
     {json.dumps(bulk_photos)};
